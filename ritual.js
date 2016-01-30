@@ -195,7 +195,7 @@ context.fill();
 
   function paintBackground() {
     var context = contexts.background;
-    context.fillStyle = color.background;
+    context.fillStyle = "#000000";
     context.fillRect(0, 0, size.play, size.play);
   }
   
@@ -204,8 +204,6 @@ context.fill();
     context.fillStyle = "#111111";
 
     context.fillRect(0, 0, ritualView.rCanvas.width, ritualView.rCanvas.height );
-        
-    
     console.log(ritualView.rCanvas.width + ',' + ritualView.rCanvas.height);
   }
 
@@ -241,21 +239,37 @@ context.fill();
     paintFrame();
     window.requestAnimationFrame(updateGame);
   }
+  
+  function centrePlayView() {
+    // if we have a gap between the ritualView and the play view, center the play view
+    if(size.play < window.innerHeight || size.play < window.innerWidth) {
+        if(window.innerWidth > window.innerHeight){
+            // in landscape
+            containers.canvas.style.top = (ritualView.rCanvas.height - size.play) / 2 + "px";
+            containers.canvas.style.left = "0px";
+        }
+        else {
+            // in portrait
+            containers.canvas.style.top = "0px";
+            containers.canvas.style.left = (ritualView.rCanvas.width - size.play) / 2 + "px"; 
+        }
+    }
+  }
  
   function layout() {
     if(window.innerWidth > window.innerHeight){
         // in landscape
-        ritualViewWidth = window.innerWidth / 5;
+        size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.2));
+        ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.2);
         ritualViewHeight = window.innerHeight;
-        size.play = Math.min(window.innerHeight, window.innerWidth - ritualViewWidth);
         ritualView.canvas.style.top = "0px";
         ritualView.canvas.style.left = size.play + "px";
     }
     else {
         // in portrait
+        size.play = Math.min(window.innerWidth, window.innerHeight - (window.innerHeight * 0.2));
         ritualViewWidth = window.innerWidth;
-        ritualViewHeight = window.innerHeight / 5;
-        size.play = Math.min(window.innerWidth, window.innerHeight - ritualViewHeight);
+        ritualViewHeight = Math.max(window.innerHeight - size.play, window.innerHeight * 0.2);
         ritualView.canvas.style.top = size.play + "px";
         ritualView.canvas.style.left = "0px";
     }
@@ -263,6 +277,8 @@ context.fill();
     ritualView.canvas.style.height = ritualViewHeight + "px";
     ritualView.rCanvas.width = ritualViewWidth;
     ritualView.rCanvas.height = ritualViewHeight;
+    
+    centrePlayView();
 
     console.log("width: " + ritualViewWidth);
     Object.keys(canvases).forEach(function (name) {
