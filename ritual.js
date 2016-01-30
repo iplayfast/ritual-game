@@ -1,30 +1,30 @@
 var RitualGame = (function () {
-  var levels = [
+  var pi = Math.PI,
+      levels = [
         {
           numShapes: 10,
           shapeDescriptions: [
-	    { kind: 'wine'}
-            /*{ kind: 'polygon', numSides: 3 },
-            { kind: 'polygon', numSides: 4 },
-            { kind: 'polygon', numSides: 5 },
-            { kind: 'polygon', numSides: 6 },
-            { kind: 'polygon', numSides: 7 },
-            { kind: 'polygon', numSides: 8 }*/
-            // { kind: 'star', numVertices: 5 },
-            // { kind: 'star', numVertices: 7 }
+	    { kind: 'wine'},
+            { kind: 'polygon', numSides: { min: 3, max: 8 } }
           ]
         }
       ],
       minSpeed = 0.5,
-      maxSpeed = 10,
+      maxSpeed = 5,
+      minRotate = pi / 600,
+      maxRotate = pi / 120,
       size = {
         play: {}
       },
       color = {
-        background: '#f1f0cf'
+        background: '#000',
+        shape: {
+          fill: [ '#aebf94', '#99bfa6', '#95b5bf', '#969bbf', '#a68dbf',
+                  '#bf8a97', '#bf9d8e', '#bfba95' ],
+          stroke: '#444'
+        }
       },
       currentLevel,
-      pi = Math.PI,
       sin = Math.sin,
       cos = Math.cos,
       containers = {},
@@ -32,13 +32,21 @@ var RitualGame = (function () {
       contexts = {},
       shapes;
 function makeWine(description) {
-	shape = { angle:0},
-	origin = shape.origin = {x:0, y:0};
+var	shape = { rotate:0, scale:7/1000},
+	origin = shape.origin = {x:0, y:0},
+        fillColor = color.shape.fill[Math.floor(Math.random() *
+            color.shape.fill.length)];
 	shape.paint = function(context) {
+/*context.beginPath();
+context.arc(size.play/2,size.play/2,100,0,2 * pi);
+context.closePath();
+context.fillStyle = '#fff';
+context.fill();
+*/
 		context.save();
-		context.translate(0,0);
-		context.rotate(shape.angle);
-		context.scale(shape.scale / 50,shape.scale / 50);
+		context.translate(origin.x -13 * shape.scale,origin.y -13*shape.scale);
+		context.rotate(shape.rotate);
+      context.scale(shape.scale * size.play, shape.scale * size.play);
 		context.beginPath();
 		context.moveTo(0,0);
 		context.lineTo(26,0);
@@ -46,16 +54,12 @@ function makeWine(description) {
 		context.lineTo(0,26);
 		context.closePath();
 		context.clip();
-		context.translate(0,0);
-		context.translate(0,0);
-		context.scale(1,1);
-		context.translate(0,0);
 		context.strokeStyle = 'rgba(0,0,0,0)';
 		context.lineCap = 'butt';
 		context.lineJoin = 'miter';
 		context.miterLimit = 4;
-		context.save();
-		context.fillStyle = "#000000";
+	//	context.fillStyle = "#ff0000";
+		context.fillStyle = fillColor;
 		context.beginPath();
 		context.moveTo(6,26);
 		context.bezierCurveTo(6,25.455,6.449,25,7,25);
@@ -66,10 +70,10 @@ function makeWine(description) {
 		context.closePath();
 		context.fill();
 		context.stroke();
-		context.restore();
-		context.save();
 		context.fillStyle = "rgba(0, 0, 0, 0)";
-		context.strokeStyle = "#000000";
+		//context.strokeStyle = "#ff0000";
+		context.fillStyle = "#ffffff";
+		context.strokeStyle = fillColor;
 		context.lineWidth = 2;
 		context.lineCap = "round";
 		context.lineJoin = "round";
@@ -84,9 +88,8 @@ function makeWine(description) {
 		context.closePath();
 		context.fill();
 		context.stroke();
-		context.restore();
-		context.save();
-		context.fillStyle = "#000000";
+		//context.fillStyle = "#000000";
+		context.fillStyle = fillColor;
 		context.beginPath();
 		context.moveTo(9.983,4);
 		context.bezierCurveTo(9.983,4,9.037,6.393,9.037,10.36);
@@ -97,10 +100,8 @@ function makeWine(description) {
 		context.closePath();
 		context.fill();
 		context.stroke();
-		context.restore();
-		context.save();
-		context.fillStyle = "rgba(0, 0, 0, 0)";
-		context.strokeStyle = "#000000";
+		//context.strokeStyle = "#000000";
+		context.fillStyle = fillColor;
 		context.lineWidth = 2;
 		context.lineCap = "round";
 		context.lineJoin = "round";
@@ -111,19 +112,24 @@ function makeWine(description) {
 		context.fill();
 		context.stroke();
 		context.restore();
-		context.restore();
 	};
 	console.log(JSON.stringify(shape));
 	return shape;
 }
   function makePolygon(description) {
     var i, a,
-        numSides = description.numSides,
+        minSides = description.numSides.min,
+        maxSides = description.numSides.max,
+        numSides = minSides +
+            Math.floor(Math.random() * (maxSides - minSides)),
         shape = {},
         origin = shape.origin = { x: 0, y: 0 },
         exteriorAngle = 2 * pi / numSides,
-        angle = shape.angle = 0,
-        scale = shape.scale = 1,
+        rotate = shape.rotate = 0,
+        scale = shape.scale = 0.1,
+        fillColor = color.shape.fill[Math.floor(Math.random() *
+            color.shape.fill.length)],
+        strokeColor = color.shape.stroke,
         points = shape.points = new Array(numSides);
     a = (pi - exteriorAngle) / 2;
     for (i = 0; i < numSides; ++i) {
@@ -136,26 +142,27 @@ function makeWine(description) {
           i;
       context.save();
       context.translate(x0, y0);
-      context.rotate(angle);
-      context.scale(shape.scale, shape.scale);
+      context.rotate(shape.rotate);
+      context.scale(shape.scale * size.play, shape.scale * size.play);
       context.beginPath();
       context.moveTo(points[numSides - 1].x, points[numSides - 1].y);
       for (i = 0; i < numSides; ++i) {
         context.lineTo(points[i].x, points[i].y);
       }
       context.closePath();
+      context.fillStyle = fillColor;
       context.fill();
+      context.lineWidth = 4 / (shape.scale * size.play);
+      context.strokeStyle = strokeColor;
+      context.stroke();
       context.restore();
     };
     return shape;
   }
 
-  function makeStar(description) {
-  }
-
   function makeShape(description) {
     var kind = description.kind,
-        angle,
+        rotate,
         shape;
     if (kind == 'wine') {
 	shape = makeWine(description);
@@ -163,12 +170,14 @@ function makeWine(description) {
     if (kind == 'polygon') {
       shape = makePolygon(description);
     }
-    if (kind == 'star') {
-      shape = makeStar(description);
-    }
-    angle = Math.random() * 2 * pi;
+    rotate = Math.random() * 2 * pi;
     speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
-    shape.velocity = { x: cos(angle) * speed, y: sin(angle) * speed };
+    shape.move = { x: cos(rotate) * speed, y: sin(rotate) * speed,
+      rotate: minRotate + Math.random() * (maxRotate - minRotate)
+    };
+    if (Math.random() < 0.5) {
+      shape.move.rotate *= -1;
+    }
     return shape;
   }
 
@@ -200,18 +209,25 @@ function makeWine(description) {
     for (i = 0; i < numShapes; ++i) {
       shape = shapes[i] = makeShape(shapeDescriptions[
           Math.floor(shapeDescriptions.length * Math.random())]);
-      shape.scale = size.play / 10;
       shape.origin.x = shape.origin.y = size.play / 2;
     }
   }
 
   function updateGame() {
     shapes.forEach(function (shape) {
-      shape.origin.x = (shape.origin.x + shape.velocity.x +
+      shape.origin.x = (shape.origin.x + shape.move.x +
           size.play) % size.play;
-      shape.origin.y = (shape.origin.y + shape.velocity.y +
+      shape.origin.y = (shape.origin.y + shape.move.y +
           size.play) % size.play;
+      shape.rotate = (shape.rotate + shape.move.rotate);
+      while (shape.rotate > 2 * pi) {
+        shape.rotate -= 2 * pi;
+      }
+      while (shape.rotate < -2 * pi) {
+        shape.rotate += 2 * pi;
+      }
     });
+
     paintFrame();
     window.requestAnimationFrame(updateGame);
   }
