@@ -1,6 +1,6 @@
 /*
   steps
-  :%s/ctx/context/g
+  :%s/context/context/g
   remove draw var and function
   add setContext function
   remove translate,rotate and scale
@@ -8,17 +8,203 @@
   set strokeStyle to shape.fillcolor
   */
 
-function setContext(shape,size,context)
+function setContext(shape,size,context,iconMaxX,iconMaxY)
 {
-    context.translate(shape.origin.x -13 * shape.scale,shape.origin.y -13*shape.scale);
+    context.translate(shape.origin.x -iconMaxX/2 * shape.scale,shape.origin.y -iconMaxY/2*shape.scale);
     context.rotate(shape.rotate);
     context.scale(shape.scale * size.play, shape.scale * size.play);
+}
+function cancerDraw(shape,size,context)
+{
+    context.save();
+    setContext(shape,size,context,13,13);
+    context.fillStyle = shape.fillColor;
+context.strokeStyle = shape.fillColor;
+context.beginPath();
+context.translate(0,0);
+context.beginPath();
+context.moveTo(0,0);
+context.lineTo(26,0);
+context.lineTo(26,26);
+context.lineTo(0,26);
+context.closePath();
+context.clip();
+context.translate(0,0);
+context.translate(0,0);
+context.scale(1,1);
+context.translate(0,0);
+context.lineCap = 'butt';
+context.lineJoin = 'miter';
+context.miterLimit = 4;
+context.save();
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.arc(20.5,10.5,4.5,0,6.283185307179586,true);
+context.closePath();
+context.fill();
+context.stroke();
+context.restore();
+context.save();
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(23.76,7.371);
+context.bezierCurveTo(23.76,7.371,19.868000000000002,3,12.583000000000002,3);
+context.bezierCurveTo(5.576,3,1,7,1,7);
+context.fill();
+context.stroke();
+context.restore();
+context.save();
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.arc(5.5,15.5,4.5,0,6.283185307179586,true);
+context.closePath();
+context.fill();
+context.stroke();
+context.restore();
+context.save();
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(2.24,18.629);
+context.bezierCurveTo(2.24,18.629,6.132,23,13.417,23);
+context.bezierCurveTo(20.424,23,25,19,25,19);
+context.fill();
+context.stroke();
+context.restore();
+context.restore();
+}
+
+function ariesDraw(shape,size,context)
+{
+    context.save();
+    setContext(shape,size,context,13,13);
+    context.fillStyle = shape.fillColor;
+context.strokeStyle = shape.fillColor;
+context.beginPath();
+context.moveTo(0,0);
+context.lineTo(26,0);
+context.lineTo(26,26);
+context.lineTo(0,26);
+context.closePath();
+context.clip();
+context.translate(0,0);
+context.translate(0,0);
+context.scale(1,1);
+context.translate(0,0);
+context.strokeStyle = 'rgba(0,0,0,0)';
+context.lineCap = 'butt';
+context.lineJoin = 'miter';
+context.miterLimit = 4;
+context.save();
+//context.fillStyle = "rgba(0, 0, 0, 0)";
+    //context.fillStyle = shape.fillColor;
+//context.strokeStyle = "#000000";
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(12.994,24.989);
+context.bezierCurveTo(12.994,22.03,14.16,0.9960000000000022,21,0.9960000000000022);
+context.bezierCurveTo(24.498,0.9960000000000022,25.02,4.017000000000002,25.02,4.017000000000002);
+context.fill();
+context.stroke();
+context.restore();
+context.save();
+//context.fillStyle = "rgba(0, 0, 0, 0)";
+    //context.fillStyle = shape.fillColor;
+//context.strokeStyle = "#000000";
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(13.006,24.989);
+context.bezierCurveTo(13.006,22.03,11.84,0.996,5,0.996);
+context.bezierCurveTo(1.5019999999999998,0.996,0.9800000000000004,4.0169999999999995,0.9800000000000004,4.0169999999999995);
+context.fill();
+context.stroke();
+context.restore();
+context.restore();
+}
+
+function aquariusDraw(shape,size,context)
+{
+context.save();
+    setContext(shape,size,context,26,26);
+context.beginPath();
+context.moveTo(0,0);
+context.lineTo(26,0);
+context.lineTo(26,26);
+context.lineTo(0,26);
+context.closePath();
+context.clip();
+context.translate(0,0);
+context.translate(0,0);
+context.scale(1,1);
+context.translate(0,0);
+context.strokeStyle = 'rgba(0,0,0,0)';
+context.lineCap = 'butt';
+context.lineJoin = 'miter';
+context.miterLimit = 4;
+context.save();
+context.fillStyle = "rgba(0, 0, 0, 0)";
+    context.fillStyle = shape.fillColor;
+context.strokeStyle = "#000000";
+    context.strokeStyle = shape.fillColor;
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(1,10);
+context.bezierCurveTo(2,10,5,7,6,7);
+context.bezierCurveTo(7,7,8,10,9,10);
+context.bezierCurveTo(10,10,13,7,14,7);
+context.bezierCurveTo(15,7,16,10,17,10);
+context.bezierCurveTo(18,10,21,7,22,7);
+context.bezierCurveTo(23,7,24,10,25,10);
+context.fill();
+context.stroke();
+context.restore();
+context.save();
+context.fillStyle = "rgba(0, 0, 0, 0)";
+    context.fillStyle = shape.fillColor;
+context.strokeStyle = "#000000";
+context.strokeStyle = shape.fillColor;
+context.lineWidth = 2;
+context.lineCap = "round";
+context.lineJoin = "round";
+context.miterLimit = 10;
+context.beginPath();
+context.moveTo(1,19);
+context.bezierCurveTo(2,19,5,16,6,16);
+context.bezierCurveTo(7,16,8,19,9,19);
+context.bezierCurveTo(10,19,13,16,14,16);
+context.bezierCurveTo(15,16,16,19,17,19);
+context.bezierCurveTo(18,19,21,16,22,16);
+context.bezierCurveTo(23,16,24,19,25,19);
+context.fill();
+context.stroke();
+context.restore();
+context.restore();
 }
 
 function cheeseDraw(shape,size,context)
 {
     context.save();
-    setContext(shape,size,context);
+    setContext(shape,size,context,26,26);
     context.beginPath();
     context.moveTo(0,0);
     context.lineTo(26,0);
@@ -187,7 +373,7 @@ function cheeseDraw(shape,size,context)
 function
 wineDraw(shape, size, context) {
     context.save();
-    setContext(shape,size,context);
+    setContext(shape,size,context,26,26);
     context.beginPath();
     context.moveTo(0,0);
     context.lineTo(26,0);

@@ -8,6 +8,10 @@ var RitualGame = (function () {
           shapeDescriptions: [
         { kind: 'wine'}
         ,{ kind: 'cheese'}
+        ,{ kind: 'aquarius'}
+        ,{ kind: 'aries'}
+        ,{ kind: 'cancer'}
+
   /*      ,{ kind: 'polygon', numSides: { min: 3, max: 8 } }
   */]
         }
@@ -55,6 +59,15 @@ var RitualGame = (function () {
             break;
         case "cheese":
             shape.paint = cheeseDraw.bind(this, shape, size);
+            break;
+        case "aquarius":
+            shape.paint = aquariusDraw.bind(this,shape,size);
+            break;
+        case "aries":
+            shape.paint = ariesDraw.bind(this,shape,size);
+            break;
+        case "cancer":
+            shape.paint = cancerDraw.bind(this,shape,size);
             break;
         }
         return shape;
@@ -111,15 +124,11 @@ var RitualGame = (function () {
     var kind = description.kind,
         rotate,
         shape;
-    if (kind == 'wine') {
-	    shape = makeIcon(description);
-    }
-    if (kind == 'cheese') {
-	shape = makeIcon(description);
-    }
     if (kind == 'polygon') {
       shape = makePolygon(description);
     }
+    else
+        shape = makeIcon(description);
     rotate = Math.random() * 2 * pi;
     speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
     shape.move = { x: cos(rotate) * speed, y: sin(rotate) * speed,
