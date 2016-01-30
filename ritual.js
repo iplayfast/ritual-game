@@ -8,7 +8,9 @@ var RitualGame = (function () {
           shapeDescriptions: [
         { kind: 'wine'}
         ,{ kind: 'cheese'}
-        ,{ kind: 'aquarius'}
+        ,{ kind: 'beer'}
+        ,{ kind: 'cafe'}
+        /*,{ kind: 'aquarius'}
         ,{ kind: 'aries'}
         ,{ kind: 'cancer'}
         ,{ kind: 'cap'}
@@ -69,6 +71,12 @@ var RitualGame = (function () {
             break;
         case "cheese":
             shape.paint = cheeseDraw.bind(this, shape, size);
+            break;
+        case "beer":
+            shape.paint = beerDraw.bind(this, shape, size);
+            break;
+        case "cafe":
+            shape.paint = cafeDraw.bind(this, shape, size);
             break;
         case "aquarius":
             shape.paint = aquariusDraw.bind(this,shape,size);
