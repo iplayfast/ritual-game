@@ -3,12 +3,13 @@ var RitualGame = (function () {
         {
           numShapes: 10,
           shapeDescriptions: [
-            { kind: 'polygon', numSides: 3 },
+	    { kind: 'wine'}
+            /*{ kind: 'polygon', numSides: 3 },
             { kind: 'polygon', numSides: 4 },
             { kind: 'polygon', numSides: 5 },
             { kind: 'polygon', numSides: 6 },
             { kind: 'polygon', numSides: 7 },
-            { kind: 'polygon', numSides: 8 }
+            { kind: 'polygon', numSides: 8 }*/
             // { kind: 'star', numVertices: 5 },
             // { kind: 'star', numVertices: 7 }
           ]
@@ -30,7 +31,91 @@ var RitualGame = (function () {
       canvases = {},
       contexts = {},
       shapes;
-
+function makeWine(description) {
+	shape = { angle:0},
+	origin = shape.origin = {x:0, y:0};
+	shape.paint = function(context) {
+		context.save();
+		context.translate(0,0);
+		context.rotate(shape.angle);
+		context.scale(shape.scale / 50,shape.scale / 50);
+		context.beginPath();
+		context.moveTo(0,0);
+		context.lineTo(26,0);
+		context.lineTo(26,26);
+		context.lineTo(0,26);
+		context.closePath();
+		context.clip();
+		context.translate(0,0);
+		context.translate(0,0);
+		context.scale(1,1);
+		context.translate(0,0);
+		context.strokeStyle = 'rgba(0,0,0,0)';
+		context.lineCap = 'butt';
+		context.lineJoin = 'miter';
+		context.miterLimit = 4;
+		context.save();
+		context.fillStyle = "#000000";
+		context.beginPath();
+		context.moveTo(6,26);
+		context.bezierCurveTo(6,25.455,6.449,25,7,25);
+		context.bezierCurveTo(7,25,13,23.881,13,21);
+		context.bezierCurveTo(13,23.881,19,25,19,25);
+		context.bezierCurveTo(19.551,25,20,25.449,20,26);
+		context.lineTo(6,26);
+		context.closePath();
+		context.fill();
+		context.stroke();
+		context.restore();
+		context.save();
+		context.fillStyle = "rgba(0, 0, 0, 0)";
+		context.strokeStyle = "#000000";
+		context.lineWidth = 2;
+		context.lineCap = "round";
+		context.lineJoin = "round";
+		context.miterLimit = 10;
+		context.beginPath();
+		context.moveTo(7.38,1);
+		context.bezierCurveTo(7.38,1,6.128,4.4879999999999995,6.128,9.738);
+		context.bezierCurveTo(6.128,12.869,9.423,16,13.016,16);
+		context.bezierCurveTo(16.608,16,19.872,12.581,19.872,9.738);
+		context.bezierCurveTo(19.872,4.4879999999999995,18.651,1,18.651,1);
+		context.lineTo(7.38,1);
+		context.closePath();
+		context.fill();
+		context.stroke();
+		context.restore();
+		context.save();
+		context.fillStyle = "#000000";
+		context.beginPath();
+		context.moveTo(9.983,4);
+		context.bezierCurveTo(9.983,4,9.037,6.393,9.037,10.36);
+		context.bezierCurveTo(9.037,12.725,11.527000000000001,15.091999999999999,14.243000000000002,15.091999999999999);
+		context.bezierCurveTo(16.958000000000002,15.091999999999999,19.425000000000004,12.508,19.425000000000004,10.36);
+		context.bezierCurveTo(19.425000000000004,6.3919999999999995,18.503000000000004,3.999999999999999,18.503000000000004,3.999999999999999);
+		context.lineTo(9.983,3.999999999999999);
+		context.closePath();
+		context.fill();
+		context.stroke();
+		context.restore();
+		context.save();
+		context.fillStyle = "rgba(0, 0, 0, 0)";
+		context.strokeStyle = "#000000";
+		context.lineWidth = 2;
+		context.lineCap = "round";
+		context.lineJoin = "round";
+		context.miterLimit = 10;
+		context.beginPath();
+		context.moveTo(13,16);
+		context.lineTo(13,24);
+		context.fill();
+		context.stroke();
+		context.restore();
+		context.restore();
+	};
+	console.log(JSON.stringify(shape));
+	return shape;
+}
   function makePolygon(description) {
     var i, a,
         numSides = description.numSides,
@@ -72,6 +157,9 @@ var RitualGame = (function () {
     var kind = description.kind,
         angle,
         shape;
+    if (kind == 'wine') {
+	shape = makeWine(description);
+    }
     if (kind == 'polygon') {
       shape = makePolygon(description);
     }
