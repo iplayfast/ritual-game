@@ -1,29 +1,29 @@
 var RitualGame = (function () {
-  var levels = [
+  var pi = Math.PI,
+      levels = [
         {
           numShapes: 10,
           shapeDescriptions: [
-            { kind: 'polygon', numSides: 3 },
-            { kind: 'polygon', numSides: 4 },
-            { kind: 'polygon', numSides: 5 },
-            { kind: 'polygon', numSides: 6 },
-            { kind: 'polygon', numSides: 7 },
-            { kind: 'polygon', numSides: 8 }
-            // { kind: 'star', numVertices: 5 },
-            // { kind: 'star', numVertices: 7 }
+            { kind: 'polygon', numSides: { min: 3, max: 8 } }
           ]
         }
       ],
       minSpeed = 0.5,
-      maxSpeed = 10,
+      maxSpeed = 5,
+      minRotate = pi / 600,
+      maxRotate = pi / 120,
       size = {
         play: {}
       },
       color = {
-        background: '#f1f0cf'
+        background: '#000',
+        shape: {
+          fill: [ '#aebf94', '#99bfa6', '#95b5bf', '#969bbf', '#a68dbf',
+                  '#bf8a97', '#bf9d8e', '#bfba95' ],
+          stroke: '#444'
+        }
       },
       currentLevel,
-      pi = Math.PI,
       sin = Math.sin,
       cos = Math.cos,
       containers = {},
@@ -33,12 +33,18 @@ var RitualGame = (function () {
 
   function makePolygon(description) {
     var i, a,
-        numSides = description.numSides,
+        minSides = description.numSides.min,
+        maxSides = description.numSides.max,
+        numSides = minSides +
+            Math.floor(Math.random() * (maxSides - minSides)),
         shape = {},
         origin = shape.origin = { x: 0, y: 0 },
         exteriorAngle = 2 * pi / numSides,
-        angle = shape.angle = 0,
-        scale = shape.scale = 1,
+        rotate = shape.rotate = 0,
+        scale = shape.scale = 0.1,
+        fillColor = color.shape.fill[Math.floor(Math.random() *
+            color.shape.fill.length)],
+        strokeColor = color.shape.stroke,
         points = shape.points = new Array(numSides);
     a = (pi - exteriorAngle) / 2;
     for (i = 0; i < numSides; ++i) {
@@ -51,36 +57,39 @@ var RitualGame = (function () {
           i;
       context.save();
       context.translate(x0, y0);
-      context.rotate(angle);
-      context.scale(shape.scale, shape.scale);
+      context.rotate(shape.rotate);
+      context.scale(shape.scale * size.play, shape.scale * size.play);
       context.beginPath();
       context.moveTo(points[numSides - 1].x, points[numSides - 1].y);
       for (i = 0; i < numSides; ++i) {
         context.lineTo(points[i].x, points[i].y);
       }
       context.closePath();
+      context.fillStyle = fillColor;
       context.fill();
+      context.lineWidth = 4 / (shape.scale * size.play);
+      context.strokeStyle = strokeColor;
+      context.stroke();
       context.restore();
     };
     return shape;
   }
 
-  function makeStar(description) {
-  }
-
   function makeShape(description) {
     var kind = description.kind,
-        angle,
+        rotate,
         shape;
     if (kind == 'polygon') {
       shape = makePolygon(description);
     }
-    if (kind == 'star') {
-      shape = makeStar(description);
-    }
-    angle = Math.random() * 2 * pi;
+    rotate = Math.random() * 2 * pi;
     speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
-    shape.velocity = { x: cos(angle) * speed, y: sin(angle) * speed };
+    shape.move = { x: cos(rotate) * speed, y: sin(rotate) * speed,
+      rotate: minRotate + Math.random() * (maxRotate - minRotate)
+    };
+    if (Math.random() < 0.5) {
+      shape.move.rotate *= -1;
+    }
     return shape;
   }
 
@@ -112,17 +121,23 @@ var RitualGame = (function () {
     for (i = 0; i < numShapes; ++i) {
       shape = shapes[i] = makeShape(shapeDescriptions[
           Math.floor(shapeDescriptions.length * Math.random())]);
-      shape.scale = size.play / 10;
       shape.origin.x = shape.origin.y = size.play / 2;
     }
   }
 
   function updateGame() {
     shapes.forEach(function (shape) {
-      shape.origin.x = (shape.origin.x + shape.velocity.x +
+      shape.origin.x = (shape.origin.x + shape.move.x +
           size.play) % size.play;
-      shape.origin.y = (shape.origin.y + shape.velocity.y +
+      shape.origin.y = (shape.origin.y + shape.move.y +
           size.play) % size.play;
+      shape.rotate = (shape.rotate + shape.move.rotate);
+      while (shape.rotate > 2 * pi) {
+        shape.rotate -= 2 * pi;
+      }
+      while (shape.rotate < -2 * pi) {
+        shape.rotate += 2 * pi;
+      }
     });
     paintFrame();
     window.requestAnimationFrame(updateGame);
