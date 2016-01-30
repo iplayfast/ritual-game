@@ -9,3 +9,11 @@
 #gameContainer canvas {
   position: absolute;
 }
+
+#ritualView {
+  position: relative;
+}
+
+#ritualView canvas {
+  position: absolute;
+}
