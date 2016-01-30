@@ -1,0 +1,33 @@
+Algorithms for ritual names:
+
+1) some formula, eg: consonant, vowel, Consonant, vowel, double consonant, vowel, consonant
+
+2) Each icon has an associated syllable.  The full ritual word is composed of the multiple syllables
+
+eg: 
+Triangle:  tri
+Square: ska
+Pentagon: pen
+Hexagon: hex
+Circle: cir
+Wine Glass: win
+
+So, Triangle, Wine Glass, Hexagon, Circle would be: Triwinhexcir
+Wine Glass, Square, Pentagon, Square would be: Winskapenska
+
+
+Or something completely unrelated (and harder to learn):
+
+Triangle:  kan
+Square: tor
+Pentagon: rel
+Hexagon: man
+Circle: dor
+Wine Glass: zam
+
+So, Triangle, Wine Glass, Hexagon, Circle would be: Kanzammandor
+Wine Glass, Square, Pentagon, Square would be: Zamtorreltor
+
+If we keep this as a constant, players would get better by learning the associated syllables
+
+
