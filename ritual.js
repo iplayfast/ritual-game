@@ -168,7 +168,7 @@ var RitualGame = (function () {
     context.lineTo(lineWidth/2, 0);
     context.stroke();
     
-    if(isLandscape() || ritualCanvas.height > ritualCanvas.width ){
+    if(isLandscape()){
         // draw horizontal divider
         context.beginPath();
         context.moveTo(lineWidth/2, ritualCanvas.height / 2 - lineWidth/2);
@@ -196,16 +196,41 @@ var RitualGame = (function () {
   
   function drawRituals() {
     var ritualAmount = rituals.length - 1;
-    var magicWord = "";
-    for (var i = 0; i < 3; i++) {
-        var randomElement = Math.floor((Math.random() * ritualAmount));
-        console.log("we got a random ritual: " + rituals[randomElement]);
-        magicWord = magicWord + rituals[randomElement];
+    
+    var YOFFSET = 30;
+    var currentYOffset = 20;
+    var originalYOffset = currentYOffset;
+    var XOFFSET = 200;
+    var currentXOffset = 10;
+    for (var i = 0; i < 10; i++) {
+        var magicWord = "";
+        for (var j = 0; j < 3; j++) {
+            var randomElement = Math.floor((Math.random() * ritualAmount));
+            console.log("we got a random ritual: " + rituals[randomElement]);
+            magicWord = magicWord + rituals[randomElement];
+        }
+        magicWord = magicWord.charAt(0).toUpperCase() + magicWord.slice(1);
+        if(isLandscape()){
+            ritualContext.font = "20px Arial";
+            ritualContext.fillStyle = 'blue';
+            ritualContext.fillText(magicWord,currentXOffset,currentYOffset + 20);
+            currentYOffset += YOFFSET;
+            if(currentYOffset >= (ritualCanvas.height / 2) - 12 ) {
+                currentYOffset = originalYOffset;
+                currentXOffset += XOFFSET;
+            }
+        }
+        else {
+            ritualContext.font = "16px Arial";
+            ritualContext.fillStyle = 'blue';
+            ritualContext.fillText(magicWord,currentXOffset,currentYOffset);
+            currentYOffset += 20;
+            if(currentYOffset >= ritualCanvas.height - 12 ) {
+                currentYOffset = originalYOffset;
+                currentXOffset += 125;
+            }
+        }
     }
-    magicWord = magicWord.charAt(0).toUpperCase() + magicWord.slice(1);
-    ritualContext.font = "24px Arial";
-    ritualContext.fillStyle = 'blue';
-    ritualContext.fillText(magicWord,10,50);
   
     /*rituals.forEach(function (ritual) {
         // ritual
@@ -267,8 +292,8 @@ var RitualGame = (function () {
  
   function layout() {
     if(isLandscape()){
-        size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.2));
-        ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.2);
+        size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.25));
+        ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.25);
         ritualViewHeight = window.innerHeight;
         ritualCanvas.style.top = "0px";
         ritualCanvas.style.left = size.play + "px";
