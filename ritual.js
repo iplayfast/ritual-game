@@ -1,3 +1,4 @@
+
 var RitualGame = (function () {
   var pi = Math.PI,
       levels = [
@@ -5,6 +6,7 @@ var RitualGame = (function () {
           numShapes: 10,
           shapeDescriptions: [
 	    { kind: 'wine'},
+	    { kind: 'cheese'},
             { kind: 'polygon', numSides: { min: 3, max: 8 } }
           ]
         }
@@ -31,91 +33,20 @@ var RitualGame = (function () {
       canvases = {},
       contexts = {},
       shapes;
-function makeWine(description) {
-var	shape = { rotate:0, scale:7/1000},
-	origin = shape.origin = {x:0, y:0},
-        fillColor = color.shape.fill[Math.floor(Math.random() *
-            color.shape.fill.length)];
-	shape.paint = function(context) {
-/*context.beginPath();
-context.arc(size.play/2,size.play/2,100,0,2 * pi);
-context.closePath();
-context.fillStyle = '#fff';
-context.fill();
-*/
-		context.save();
-		context.translate(origin.x -13 * shape.scale,origin.y -13*shape.scale);
-		context.rotate(shape.rotate);
-      context.scale(shape.scale * size.play, shape.scale * size.play);
-		context.beginPath();
-		context.moveTo(0,0);
-		context.lineTo(26,0);
-		context.lineTo(26,26);
-		context.lineTo(0,26);
-		context.closePath();
-		context.clip();
-		context.strokeStyle = 'rgba(0,0,0,0)';
-		context.lineCap = 'butt';
-		context.lineJoin = 'miter';
-		context.miterLimit = 4;
-	//	context.fillStyle = "#ff0000";
-		context.fillStyle = fillColor;
-		context.beginPath();
-		context.moveTo(6,26);
-		context.bezierCurveTo(6,25.455,6.449,25,7,25);
-		context.bezierCurveTo(7,25,13,23.881,13,21);
-		context.bezierCurveTo(13,23.881,19,25,19,25);
-		context.bezierCurveTo(19.551,25,20,25.449,20,26);
-		context.lineTo(6,26);
-		context.closePath();
-		context.fill();
-		context.stroke();
-		context.fillStyle = "rgba(0, 0, 0, 0)";
-		//context.strokeStyle = "#ff0000";
-		context.fillStyle = "#ffffff";
-		context.strokeStyle = fillColor;
-		context.lineWidth = 2;
-		context.lineCap = "round";
-		context.lineJoin = "round";
-		context.miterLimit = 10;
-		context.beginPath();
-		context.moveTo(7.38,1);
-		context.bezierCurveTo(7.38,1,6.128,4.4879999999999995,6.128,9.738);
-		context.bezierCurveTo(6.128,12.869,9.423,16,13.016,16);
-		context.bezierCurveTo(16.608,16,19.872,12.581,19.872,9.738);
-		context.bezierCurveTo(19.872,4.4879999999999995,18.651,1,18.651,1);
-		context.lineTo(7.38,1);
-		context.closePath();
-		context.fill();
-		context.stroke();
-		//context.fillStyle = "#000000";
-		context.fillStyle = fillColor;
-		context.beginPath();
-		context.moveTo(9.983,4);
-		context.bezierCurveTo(9.983,4,9.037,6.393,9.037,10.36);
-		context.bezierCurveTo(9.037,12.725,11.527000000000001,15.091999999999999,14.243000000000002,15.091999999999999);
-		context.bezierCurveTo(16.958000000000002,15.091999999999999,19.425000000000004,12.508,19.425000000000004,10.36);
-		context.bezierCurveTo(19.425000000000004,6.3919999999999995,18.503000000000004,3.999999999999999,18.503000000000004,3.999999999999999);
-		context.lineTo(9.983,3.999999999999999);
-		context.closePath();
-		context.fill();
-		context.stroke();
-		//context.strokeStyle = "#000000";
-		context.fillStyle = fillColor;
-		context.lineWidth = 2;
-		context.lineCap = "round";
-		context.lineJoin = "round";
-		context.miterLimit = 10;
-		context.beginPath();
-		context.moveTo(13,16);
-		context.lineTo(13,24);
-		context.fill();
-		context.stroke();
-		context.restore();
-	};
+
+
+	function makeIcon(description) {
+	var	shape = { rotate:0, scale:7/1000},
+		origin = shape.origin = {x:0, y:0},
+		fillColor = color.shape.fill[Math.floor(Math.random() * color.shape.fill.length)];
+console.log(this);
+	shape.paint = wineDraw.bind(this,shape);
 	console.log(JSON.stringify(shape));
 	return shape;
-}
+	}
+// to set tabs  for vim
+// :se ts=2
+// :se sw=2
   function makePolygon(description) {
     var i, a,
         minSides = description.numSides.min,
@@ -165,7 +96,10 @@ context.fill();
         rotate,
         shape;
     if (kind == 'wine') {
-	shape = makeWine(description);
+	shape = makeIcon(description);
+    }
+    if (kind == 'cheese') {
+	shape = makeIcon(description);
     }
     if (kind == 'polygon') {
       shape = makePolygon(description);
