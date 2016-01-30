@@ -11,6 +11,15 @@ var RitualGame = (function () {
         ,{ kind: 'aquarius'}
         ,{ kind: 'aries'}
         ,{ kind: 'cancer'}
+        ,{ kind: 'cap'}
+        ,{ kind: 'gem'}
+        ,{ kind: 'leo'}
+        ,{ kind: 'libra'}
+        ,{ kind: 'pisces'}
+        ,{ kind: 'sag'}
+        ,{ kind: 'scorpio'}
+        ,{ kind: 'taurus'}
+        ,{ kind: 'virgo'}
 
   /*      ,{ kind: 'polygon', numSides: { min: 3, max: 8 } }
   */]
@@ -69,6 +78,33 @@ var RitualGame = (function () {
             break;
         case "cancer":
             shape.paint = cancerDraw.bind(this,shape,size);
+            break;
+        case "cap":
+            shape.paint = capDraw.bind(this,shape,size);
+            break;
+        case "gem":
+            shape.paint = gemDraw.bind(this,shape,size);
+            break;
+        case "leo":
+            shape.paint = leoDraw.bind(this,shape,size);
+            break;
+        case "libra":
+            shape.paint = libraDraw.bind(this,shape,size);
+            break;
+        case "pisces":
+            shape.paint = piscesDraw.bind(this,shape,size);
+            break;
+        case "sag":
+            shape.paint = sagDraw.bind(this,shape,size);
+            break;
+        case "scorpio":
+            shape.paint = scorpioDraw.bind(this,shape,size);
+            break;
+        case "taurus":
+            shape.paint = taurusDraw.bind(this,shape,size);
+            break;
+        case "virgo":
+            shape.paint = virgoDraw.bind(this,shape,size);
             break;
         }
         return shape;
