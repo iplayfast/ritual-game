@@ -29,7 +29,8 @@ var RitualGame = (function () {
       containers = {},
       canvases = {},
       contexts = {},
-      shapes;
+      shapes,
+      ritualView = {};
 
   function makePolygon(description) {
     var i, a,
@@ -110,6 +111,16 @@ var RitualGame = (function () {
     context.fillStyle = color.background;
     context.fillRect(0, 0, size.play, size.play);
   }
+  
+  function paintRitualBackground() {
+    var context = ritualView.context;
+    context.fillStyle = "#111111";
+
+    context.fillRect(0, 0, ritualView.rCanvas.width, ritualView.rCanvas.height );
+        
+    
+    console.log(ritualView.rCanvas.width + ',' + ritualView.rCanvas.height);
+  }
 
   function loadLevel() {
     var level = currentLevel,
@@ -144,15 +155,44 @@ var RitualGame = (function () {
   }
  
   function layout() {
-    size.play = Math.min(window.innerWidth, window.innerHeight);
+    if(window.innerWidth > window.innerHeight){
+        // in landscape
+        ritualViewWidth = window.innerWidth / 5;
+        ritualViewHeight = window.innerHeight;
+        size.play = Math.min(window.innerHeight, window.innerWidth - ritualViewWidth);
+        ritualView.canvas.style.top = "0px";
+        ritualView.canvas.style.left = size.play + "px";
+    }
+    else {
+        // in portrait
+        ritualViewWidth = window.innerWidth;
+        ritualViewHeight = window.innerHeight / 5;
+        size.play = Math.min(window.innerWidth, window.innerHeight - ritualViewHeight);
+        ritualView.canvas.style.top = size.play + "px";
+        ritualView.canvas.style.left = "0px";
+    }
+    ritualView.canvas.style.width = ritualViewWidth + "px";
+    ritualView.canvas.style.height = ritualViewHeight + "px";
+    ritualView.rCanvas.width = ritualViewWidth;
+    ritualView.rCanvas.height = ritualViewHeight;
+
+    console.log("width: " + ritualViewWidth);
     Object.keys(canvases).forEach(function (name) {
       var canvas = canvases[name];
       canvas.width = canvas.height = size.play;
     });
     paintBackground();
+    paintRitualBackground();
   }
 
   function load() {
+    // setup ritual
+    ritualView.canvas = document.getElementById('ritualView');
+    rCanvas = document.createElement('canvas');
+    ritualView.canvas.appendChild(rCanvas);
+    ritualView.context = rCanvas.getContext('2d');
+    ritualView.rCanvas = rCanvas;
+
     containers.canvas = document.getElementById('gameContainer');
     [ 'background', 'shapes' ].forEach(function (name) {
       var canvas = canvases[name] = document.createElement('canvas');
