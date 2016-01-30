@@ -14,10 +14,10 @@ body {
   position: absolute;
 }
 
-#ritualView {
+#ritualContainer {
   position: relative;
 }
 
-#ritualView canvas {
+#ritualContainer canvas {
   position: absolute;
 }

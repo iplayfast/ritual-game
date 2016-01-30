@@ -36,7 +36,9 @@ var RitualGame = (function () {
       contexts = {},
       ritualCanvas,
       ritualContext,
-      shapes;
+      shapes,
+      rituals = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"];
+
 function makeWine(description) {
 var	shape = { rotate:0, scale:7/1000},
 	origin = shape.origin = {x:0, y:0},
@@ -210,6 +212,67 @@ context.fill();
 
     context.fillRect(0, 0, ritualCanvas.width, ritualCanvas.height );
     console.log(ritualCanvas.width + ',' + ritualCanvas.height);
+
+    // add border and divider horizontally
+    var lineWidth = 5;
+    context.beginPath();
+    context.lineWidth = lineWidth;
+    context.strokeStyle = '#ffffff';
+    context.moveTo(lineWidth/2, lineWidth/2);
+    context.lineTo(ritualCanvas.width - lineWidth/2, lineWidth/2);
+    context.lineTo(ritualCanvas.width - lineWidth/2, ritualCanvas.height - lineWidth/2);
+    context.lineTo(lineWidth/2, ritualCanvas.height - lineWidth/2);
+    context.lineTo(lineWidth/2, 0);
+    context.stroke();
+    
+    if(isLandscape() || ritualCanvas.height > ritualCanvas.width ){
+        // draw horizontal divider
+        context.beginPath();
+        context.moveTo(lineWidth/2, ritualCanvas.height / 2 - lineWidth/2);
+        context.lineTo(ritualCanvas.width - lineWidth/2, ritualCanvas.height / 2 - lineWidth/2);
+        context.stroke();   
+    }
+    else {
+        // draw vertical divider
+        context.beginPath();
+        context.moveTo(ritualCanvas.width / 2, lineWidth/2);
+        context.lineTo(ritualCanvas.width / 2, ritualCanvas.height - lineWidth/2);
+        context.stroke();
+    }
+    drawRituals();
+  }
+  
+  function isLandscape() {
+    if(window.innerWidth > window.innerHeight){
+        return true;
+    }
+    else {
+        return false;
+    }
+  }
+  
+  function drawRituals() {
+    var ritualAmount = rituals.length - 1;
+    var magicWord = "";
+    for (var i = 0; i < 3; i++) {
+        var randomElement = Math.floor((Math.random() * ritualAmount));
+        console.log("we got a random ritual: " + rituals[randomElement]);
+        magicWord = magicWord + rituals[randomElement];
+    }
+    magicWord = magicWord.charAt(0).toUpperCase() + magicWord.slice(1);
+    ritualContext.font = "24px Arial";
+    ritualContext.fillStyle = 'blue';
+    ritualContext.fillText(magicWord,10,50);
+  
+    /*rituals.forEach(function (ritual) {
+        // ritual
+        rituals.forEach(function (ritual) {
+            // shape
+            if(ritual == "win") {
+                shape = makeWine();
+            }
+        });
+    });*/
   }
 
   function loadLevel() {
@@ -248,13 +311,11 @@ context.fill();
   function centrePlayView() {
     // if we have a gap between the ritual view and the play view, center the play view
     if(size.play < window.innerHeight || size.play < window.innerWidth) {
-        if(window.innerWidth > window.innerHeight){
-            // in landscape
+        if(isLandscape()){
             containers.canvas.style.top = (ritualCanvas.height - size.play) / 2 + "px";
             containers.canvas.style.left = "0px";
         }
         else {
-            // in portrait
             containers.canvas.style.top = "0px";
             containers.canvas.style.left = (ritualCanvas.width - size.play) / 2 + "px"; 
         }
@@ -262,8 +323,7 @@ context.fill();
   }
  
   function layout() {
-    if(window.innerWidth > window.innerHeight){
-        // in landscape
+    if(isLandscape()){
         size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.2));
         ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.2);
         ritualViewHeight = window.innerHeight;
@@ -271,12 +331,11 @@ context.fill();
         ritualCanvas.style.left = size.play + "px";
     }
     else {
-        // in portrait
         size.play = Math.min(window.innerWidth, window.innerHeight - (window.innerHeight * 0.2));
         ritualViewWidth = window.innerWidth;
         ritualViewHeight = Math.max(window.innerHeight - size.play, window.innerHeight * 0.2);
-        ritualView.canvas.style.top = size.play + "px";
-        ritualView.canvas.style.left = "0px";
+        ritualCanvas.style.top = size.play + "px";
+        ritualCanvas.style.left = "0px";
     }
     ritualCanvas.style.width = ritualViewWidth + "px";
     ritualCanvas.style.height = ritualViewHeight + "px";
