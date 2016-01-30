@@ -5,10 +5,10 @@ var RitualGame = (function () {
         {
           numShapes: 10,
           shapeDescriptions: [
-	    { kind: 'wine'},
-	    { kind: 'cheese'},
-            { kind: 'polygon', numSides: { min: 3, max: 8 } }
-          ]
+        { kind: 'wine'}
+        ,{ kind: 'cheese'}
+  /*      ,{ kind: 'polygon', numSides: { min: 3, max: 8 } }
+  */]
         }
       ],
       minSpeed = 0.5,
@@ -35,15 +35,22 @@ var RitualGame = (function () {
       shapes;
 
 
-	function makeIcon(description) {
-	var	shape = { rotate:0, scale:7/1000},
-		origin = shape.origin = {x:0, y:0},
-		fillColor = color.shape.fill[Math.floor(Math.random() * color.shape.fill.length)];
-console.log(this);
-	shape.paint = wineDraw.bind(this,shape);
-	console.log(JSON.stringify(shape));
-	return shape;
-	}
+    function makeIcon(description) {
+        var	shape = { rotate:0, scale:7/1000},
+        origin = shape.origin = {x:0, y:0};
+        shape.fillColor = color.shape.fill[Math.floor(Math.random() * color.shape.fill.length)];
+        console.log(description);
+
+        switch(description.kind)	{
+        case "wine":
+            shape.paint = wineDraw.bind(this, shape, size);
+            break;
+        case "cheese":
+            shape.paint = cheeseDraw.bind(this, shape, size);
+            break;
+        }
+        return shape;
+    }
 // to set tabs  for vim
 // :se ts=2
 // :se sw=2
@@ -96,7 +103,7 @@ console.log(this);
         rotate,
         shape;
     if (kind == 'wine') {
-	shape = makeIcon(description);
+	    shape = makeIcon(description);
     }
     if (kind == 'cheese') {
 	shape = makeIcon(description);
