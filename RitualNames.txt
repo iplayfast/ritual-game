@@ -32,6 +32,32 @@ If we keep this as a constant, players would get better by learning the associat
 
 List of pronouncable syllables:
 
-
-
-
+dat
+dom
+dor
+jak
+jet
+jor
+kal
+kan
+kor
+lar
+lok
+lun
+man
+naz
+nok
+pan
+pod
+rel
+ron
+tan
+tik
+tok
+tor
+ver
+viz
+wax
+zam
+zim
+zor

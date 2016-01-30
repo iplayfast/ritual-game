@@ -1,6 +1,7 @@
 
 var RitualGame = (function () {
   var pi = Math.PI,
+      hammertime,
       levels = [
         {
           numShapes: 10,
@@ -21,8 +22,11 @@ var RitualGame = (function () {
       color = {
         background: '#000',
         shape: {
-          fill: [ '#aebf94', '#99bfa6', '#95b5bf', '#969bbf', '#a68dbf',
-                  '#bf8a97', '#bf9d8e', '#bfba95' ],
+          fill: [
+            '#aebf94', '#99bfa6', '#95b5bf', '#969bbf', '#a68dbf',
+            '#bf8a97', '#bf9d8e', '#bfba95', '#ddd47e', '#9fdd75',
+            '#8bc9dd', '#9e9ddd', '#d797dd', '#dd6f87', '#dd8360'
+          ],
           stroke: '#444'
         }
       },
@@ -32,6 +36,8 @@ var RitualGame = (function () {
       containers = {},
       canvases = {},
       contexts = {},
+      ritualCanvas,
+      ritualContext,
       shapes;
 
 
@@ -141,11 +147,11 @@ var RitualGame = (function () {
   }
   
   function paintRitualBackground() {
-    var context = ritualView.context;
+    var context = ritualContext;
     context.fillStyle = "#111111";
 
-    context.fillRect(0, 0, ritualView.rCanvas.width, ritualView.rCanvas.height );
-    console.log(ritualView.rCanvas.width + ',' + ritualView.rCanvas.height);
+    context.fillRect(0, 0, ritualCanvas.width, ritualCanvas.height );
+    console.log(ritualCanvas.width + ',' + ritualCanvas.height);
   }
 
   function loadLevel() {
@@ -182,17 +188,17 @@ var RitualGame = (function () {
   }
   
   function centrePlayView() {
-    // if we have a gap between the ritualView and the play view, center the play view
+    // if we have a gap between the ritual view and the play view, center the play view
     if(size.play < window.innerHeight || size.play < window.innerWidth) {
         if(window.innerWidth > window.innerHeight){
             // in landscape
-            containers.canvas.style.top = (ritualView.rCanvas.height - size.play) / 2 + "px";
+            containers.canvas.style.top = (ritualCanvas.height - size.play) / 2 + "px";
             containers.canvas.style.left = "0px";
         }
         else {
             // in portrait
             containers.canvas.style.top = "0px";
-            containers.canvas.style.left = (ritualView.rCanvas.width - size.play) / 2 + "px"; 
+            containers.canvas.style.left = (ritualCanvas.width - size.play) / 2 + "px"; 
         }
     }
   }
@@ -203,8 +209,8 @@ var RitualGame = (function () {
         size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.2));
         ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.2);
         ritualViewHeight = window.innerHeight;
-        ritualView.canvas.style.top = "0px";
-        ritualView.canvas.style.left = size.play + "px";
+        ritualCanvas.style.top = "0px";
+        ritualCanvas.style.left = size.play + "px";
     }
     else {
         // in portrait
@@ -214,10 +220,10 @@ var RitualGame = (function () {
         ritualView.canvas.style.top = size.play + "px";
         ritualView.canvas.style.left = "0px";
     }
-    ritualView.canvas.style.width = ritualViewWidth + "px";
-    ritualView.canvas.style.height = ritualViewHeight + "px";
-    ritualView.rCanvas.width = ritualViewWidth;
-    ritualView.rCanvas.height = ritualViewHeight;
+    ritualCanvas.style.width = ritualViewWidth + "px";
+    ritualCanvas.style.height = ritualViewHeight + "px";
+    ritualCanvas.width = ritualViewWidth;
+    ritualCanvas.height = ritualViewHeight;
     
     centrePlayView();
 
@@ -232,11 +238,13 @@ var RitualGame = (function () {
 
   function load() {
     // setup ritual
-    ritualView.canvas = document.getElementById('ritualView');
-    rCanvas = document.createElement('canvas');
-    ritualView.canvas.appendChild(rCanvas);
-    ritualView.context = rCanvas.getContext('2d');
-    ritualView.rCanvas = rCanvas;
+    containers.ritual = document.getElementById('ritualContainer');
+    ritualCanvas = document.createElement('canvas');
+    containers.ritual.appendChild(ritualCanvas);
+    ritualContext = ritualCanvas.getContext('2d');
+
+    // It's hammer time -- break it down -- um-buh-buh-umm-buh-buh.
+    //hammertime = new Hammer(
 
     containers.canvas = document.getElementById('gameContainer');
     [ 'background', 'shapes' ].forEach(function (name) {
