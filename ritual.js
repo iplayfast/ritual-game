@@ -4,20 +4,20 @@ var RitualGame = (function () {
       hammertime,
       levels = [
         {
+          scale: 0.075,
           numShapes: 10,
           shapeDescriptions: [
-        { kind: 'wine'}
-        ,{ kind: 'cheese'}
-        ,{ kind: 'aquarius'}
-        ,{ kind: 'aries'}
-        ,{ kind: 'cancer'}
-
-  /*      ,{ kind: 'polygon', numSides: { min: 3, max: 8 } }
-  */]
+            { kind: 'wine'},
+            { kind: 'cheese'},
+            { kind: 'aquarius'},
+            { kind: 'aries'},
+            { kind: 'cancer'},
+            { kind: 'polygon', numSides: { min: 5, max: 5 } }
+          ]
         }
       ],
-      minSpeed = 0.5,
-      maxSpeed = 5,
+      minSpeed = 0.05 / 60,
+      maxSpeed = 0.05 / 60,
       minRotate = pi / 600,
       maxRotate = pi / 120,
       size = {
@@ -48,11 +48,9 @@ var RitualGame = (function () {
 
 
     function makeIcon(description) {
-        var	shape = { rotate:0, scale:7/1000},
-        origin = shape.origin = {x:0, y:0};
-        shape.fillColor = color.shape.fill[Math.floor(Math.random() * color.shape.fill.length)];
-        console.log(description);
-
+        var	shape = { rotate:0, scale: currentLevel.scale * 7 / 100 };
+        shape.fillColor = color.shape.fill[Math.floor(Math.random() *
+            color.shape.fill.length)];
         switch(description.kind)	{
         case "wine":
             shape.paint = wineDraw.bind(this, shape, size);
@@ -77,33 +75,32 @@ var RitualGame = (function () {
 // :se sw=2
 
   function makePolygon(description) {
-    var i, a,
+    var i, pointAngle,
         minSides = description.numSides.min,
         maxSides = description.numSides.max,
         numSides = minSides +
             Math.floor(Math.random() * (maxSides - minSides)),
         shape = {},
-        origin = shape.origin = { x: 0, y: 0 },
         exteriorAngle = 2 * pi / numSides,
         rotate = shape.rotate = 0,
-        scale = shape.scale = 0.1,
         fillColor = color.shape.fill[Math.floor(Math.random() *
             color.shape.fill.length)],
         strokeColor = color.shape.stroke,
         points = shape.points = new Array(numSides);
-    a = (pi - exteriorAngle) / 2;
+    shape.scale = currentLevel.scale;
+    pointAngle = (pi - exteriorAngle) / 2;
     for (i = 0; i < numSides; ++i) {
-      a += exteriorAngle;
-      points[i] = { x: cos(a), y: sin(a) };
+      pointAngle += exteriorAngle;
+      points[i] = { x: cos(pointAngle), y: sin(pointAngle) };
     }
     shape.paint = function (context) {
-      var x0 = origin.x,
-          y0 = origin.y,
+      var x0 = shape.origin.x,
+          y0 = shape.origin.y,
           i;
       context.save();
-      context.translate(x0, y0);
+      context.translate(x0 * size.play, y0 * size.play);
       context.rotate(shape.rotate);
-      context.scale(shape.scale * size.play, shape.scale * size.play);
+      context.scale(size.radius, size.radius);
       context.beginPath();
       context.moveTo(points[numSides - 1].x, points[numSides - 1].y);
       for (i = 0; i < numSides; ++i) {
@@ -112,7 +109,7 @@ var RitualGame = (function () {
       context.closePath();
       context.fillStyle = fillColor;
       context.fill();
-      context.lineWidth = 4 / (shape.scale * size.play);
+      context.lineWidth = 0.075;
       context.strokeStyle = strokeColor;
       context.stroke();
       context.restore();
@@ -126,12 +123,15 @@ var RitualGame = (function () {
         shape;
     if (kind == 'polygon') {
       shape = makePolygon(description);
+    } else {
+      shape = makeIcon(description);
     }
-    else
-        shape = makeIcon(description);
+    shape.origin = { x: 0.5, y: 0.5 };
     rotate = Math.random() * 2 * pi;
     speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
-    shape.move = { x: cos(rotate) * speed, y: sin(rotate) * speed,
+    shape.move = {
+      x: cos(rotate) * speed,
+      y: sin(rotate) * speed,
       rotate: minRotate + Math.random() * (maxRotate - minRotate)
     };
     if (Math.random() < 0.5) {
@@ -148,6 +148,12 @@ var RitualGame = (function () {
     context.clearRect(0, 0, size.play, size.play);
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
+      context.fillStyle = '#fff';
+      context.beginPath();
+      context.arc(shape.origin.x * size.play, shape.origin.y * size.play,
+          size.radius, 0, 2 * pi);
+      context.closePath();
+      context.fill();
       shape.paint(context);
     }
   }
@@ -163,7 +169,7 @@ var RitualGame = (function () {
     context.fillStyle = "#111111";
 
     context.fillRect(0, 0, ritualCanvas.width, ritualCanvas.height );
-    console.log(ritualCanvas.width + ',' + ritualCanvas.height);
+    //console.log(ritualCanvas.width + ',' + ritualCanvas.height);
 
     // add border and divider horizontally
     var lineWidth = 5;
@@ -215,7 +221,6 @@ var RitualGame = (function () {
         var magicWord = "";
         for (var j = 0; j < 3; j++) {
             var randomElement = Math.floor((Math.random() * ritualAmount));
-            console.log("we got a random ritual: " + rituals[randomElement]);
             magicWord = magicWord + rituals[randomElement];
         }
         magicWord = magicWord.charAt(0).toUpperCase() + magicWord.slice(1);
@@ -262,16 +267,25 @@ var RitualGame = (function () {
     for (i = 0; i < numShapes; ++i) {
       shape = shapes[i] = makeShape(shapeDescriptions[
           Math.floor(shapeDescriptions.length * Math.random())]);
-      shape.origin.x = shape.origin.y = size.play / 2;
     }
   }
 
   function updateGame() {
     shapes.forEach(function (shape) {
-      shape.origin.x = (shape.origin.x + shape.move.x +
-          size.play) % size.play;
-      shape.origin.y = (shape.origin.y + shape.move.y +
-          size.play) % size.play;
+      shape.origin.x += shape.move.x;
+      while (shape.origin.x < 0) {
+        shape.origin.x += 1;
+      }
+      while (shape.origin.x >= 1) {
+        shape.origin.x -= 1;
+      }
+      shape.origin.y += shape.move.y;
+      while (shape.origin.y < 0) {
+        shape.origin.y += 1;
+      }
+      while (shape.origin.y >= 1) {
+        shape.origin.y -= 1;
+      }
       shape.rotate = (shape.rotate + shape.move.rotate);
       while (shape.rotate > 2 * pi) {
         shape.rotate -= 2 * pi;
@@ -280,9 +294,9 @@ var RitualGame = (function () {
         shape.rotate += 2 * pi;
       }
     });
-
     paintFrame();
-    window.requestAnimationFrame(updateGame);
+    //window.requestAnimationFrame(updateGame);
+    setTimeout(updateGame, 1000 / 60);
   }
   
   function centrePlayView() {
@@ -301,7 +315,9 @@ var RitualGame = (function () {
  
   function layout() {
     if(isLandscape()){
-        size.play = Math.min(window.innerHeight, window.innerWidth - (window.innerWidth * 0.25));
+        size.play = Math.min(window.innerHeight,
+            window.innerWidth - (window.innerWidth * 0.25));
+        size.radius = currentLevel.scale * size.play;
         ritualViewWidth = Math.max(window.innerWidth - size.play, window.innerWidth * 0.25);
         ritualViewHeight = window.innerHeight;
         ritualCanvas.style.top = "0px";
@@ -321,13 +337,29 @@ var RitualGame = (function () {
     
     centrePlayView();
 
-    console.log("width: " + ritualViewWidth);
+    //console.log("width: " + ritualViewWidth);
     Object.keys(canvases).forEach(function (name) {
       var canvas = canvases[name];
       canvas.width = canvas.height = size.play;
     });
     paintBackground();
     paintRitualBackground();
+  }
+
+  function shapeTap(event) {
+    var offsetLeft = containers.canvas.offsetLeft,
+        offsetTop = containers.canvas.offsetTop,
+        x = event.center.x - offsetLeft,
+        y = event.center.y - offsetTop,
+        shape,
+        radius,
+        i;
+    console.log(offsetTop, offsetTop, x, y);
+    for (i = 0; i < shapes.length; ++i) {
+      shape = shapes[i];
+      console.log(JSON.stringify(shape));
+      console.log(size.radius);
+    }
   }
 
   function load() {
@@ -337,15 +369,17 @@ var RitualGame = (function () {
     containers.ritual.appendChild(ritualCanvas);
     ritualContext = ritualCanvas.getContext('2d');
 
-    // It's hammer time -- break it down -- um-buh-buh-umm-buh-buh.
-    //hammertime = new Hammer(
-
     containers.canvas = document.getElementById('gameContainer');
-    [ 'background', 'shapes' ].forEach(function (name) {
+    [ 'background', 'shapes', 'touch' ].forEach(function (name) {
       var canvas = canvases[name] = document.createElement('canvas');
       containers.canvas.appendChild(canvas);
       contexts[name] = canvas.getContext('2d');
     });
+
+    // It's hammer time -- break it down -- um-buh-buh-umm-buh-buh.
+    hammertime = new Hammer(canvases.touch);
+    hammertime.on('tap', shapeTap);
+
     currentLevel = levels[0];
     window.onresize = layout;
     layout();
