@@ -12,7 +12,18 @@ var RitualGame = (function () {
             { kind: 'aquarius'},
             { kind: 'aries'},
             { kind: 'cancer'},
-            { kind: 'polygon', numSides: { min: 5, max: 5 } }
+            { kind: 'polygon', numSides: { min: 5, max: 5 } },
+            { kind: 'beer'},
+            { kind: 'cafe'},
+            { kind: 'cap'},
+            { kind: 'gem'},
+            { kind: 'leo'},
+            { kind: 'libra'},
+            { kind: 'pisces'},
+            { kind: 'sag'},
+            { kind: 'scorpio'},
+            { kind: 'taurus'},
+            { kind: 'virgo'}
           ]
         }
       ],
@@ -43,7 +54,8 @@ var RitualGame = (function () {
       ritualCanvas,
       ritualContext,
       shapes,
-      rituals = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"];
+      rituals = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"],
+      countdownStarted = false;
 
 
 
@@ -58,6 +70,12 @@ var RitualGame = (function () {
         case "cheese":
             shape.paint = cheeseDraw.bind(this, shape, size);
             break;
+        case "beer":
+            shape.paint = beerDraw.bind(this, shape, size);
+            break;
+        case "cafe":
+            shape.paint = cafeDraw.bind(this, shape, size);
+            break;
         case "aquarius":
             shape.paint = aquariusDraw.bind(this,shape,size);
             break;
@@ -66,6 +84,33 @@ var RitualGame = (function () {
             break;
         case "cancer":
             shape.paint = cancerDraw.bind(this,shape,size);
+            break;
+        case "cap":
+            shape.paint = capDraw.bind(this,shape,size);
+            break;
+        case "gem":
+            shape.paint = gemDraw.bind(this,shape,size);
+            break;
+        case "leo":
+            shape.paint = leoDraw.bind(this,shape,size);
+            break;
+        case "libra":
+            shape.paint = libraDraw.bind(this,shape,size);
+            break;
+        case "pisces":
+            shape.paint = piscesDraw.bind(this,shape,size);
+            break;
+        case "sag":
+            shape.paint = sagDraw.bind(this,shape,size);
+            break;
+        case "scorpio":
+            shape.paint = scorpioDraw.bind(this,shape,size);
+            break;
+        case "taurus":
+            shape.paint = taurusDraw.bind(this,shape,size);
+            break;
+        case "virgo":
+            shape.paint = virgoDraw.bind(this,shape,size);
             break;
         }
         return shape;
@@ -188,7 +233,8 @@ var RitualGame = (function () {
         context.beginPath();
         context.moveTo(lineWidth/2, ritualCanvas.height / 2 - lineWidth/2);
         context.lineTo(ritualCanvas.width - lineWidth/2, ritualCanvas.height / 2 - lineWidth/2);
-        context.stroke();   
+        context.stroke();
+        drawCountdownBar(ritualCanvas.width / 2, (ritualCanvas.height / 2) + (ritualCanvas.height / 4));
     }
     else {
         // draw vertical divider
@@ -196,8 +242,53 @@ var RitualGame = (function () {
         context.moveTo(ritualCanvas.width / 2, lineWidth/2);
         context.lineTo(ritualCanvas.width / 2, ritualCanvas.height - lineWidth/2);
         context.stroke();
+        drawCountdownBar(ritualCanvas.width / 2  + (ritualCanvas.width / 4), (ritualCanvas.height / 2));
     }
     drawRituals();
+  }
+  
+  function drawCountdownBar(xPos, yPos) {
+    var imd = null;
+    var circ = Math.PI * 2;
+    var quart = Math.PI / 2;
+
+    ritualContext.beginPath();
+    ritualContext.strokeStyle = '#99CC33';
+    ritualContext.lineCap = 'round';
+    ritualContext.closePath();
+    ritualContext.fill();
+    ritualContext.lineWidth = 10.0;
+    
+    var draw = function(current) {
+        if(current > 0.4) { // turn yellow
+            ritualContext.strokeStyle = '#ffcc00';
+        }
+        if( current > 0.7) { // turn red
+            ritualContext.strokeStyle = '#ff3300';
+        }
+        ritualContext.beginPath();
+        ritualContext.arc(xPos, yPos, Math.min(ritualCanvas.width / 2, ritualCanvas.height / 4) * 0.9, -(quart), ((circ) * current) - quart, false);
+        ritualContext.stroke();
+    }
+
+    if(!countdownStarted) {
+        var progressBar = new Fx({
+            duration: 20000,
+            transition: 'linear',
+            onStep: function(step){
+                draw(step / 100);
+            }
+        });
+
+        progressBar.set = function(now){
+            var ret = Fx.prototype.set.call(this, now);
+            this.fireEvent('step', now);
+            return ret;
+        };
+
+        progressBar.start(0, 100);
+        countdownStarted = true;
+    }
   }
   
   function isLandscape() {
@@ -245,16 +336,6 @@ var RitualGame = (function () {
             }
         }
     }
-  
-    /*rituals.forEach(function (ritual) {
-        // ritual
-        rituals.forEach(function (ritual) {
-            // shape
-            if(ritual == "win") {
-                shape = makeWine();
-            }
-        });
-    });*/
   }
 
   function loadLevel() {
