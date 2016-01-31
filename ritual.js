@@ -43,6 +43,28 @@ var RitualGame = (function () {
       syllables = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"],
       countdownStarted = false;
 
+    var loadingXPos = {
+      get latest () {
+        if(isLandscape()){
+            return ritualCanvas.width / 2;
+        }
+        else {
+            return ritualCanvas.width / 2  + (ritualCanvas.width / 4);
+        }
+      }
+    }
+    
+    var loadingYPos = {
+      get latest () {
+        if(isLandscape()){
+            return  (ritualCanvas.height / 2) + (ritualCanvas.height / 4);
+        }
+        else {
+            return (ritualCanvas.height / 2);
+        }
+      }
+    }
+
     function makeIcon(description) {
         var	shape = { rotate:0, scale: currentLevel.scale * 7 / 100 },
             iconPainter = iconPainters[Math.floor(Math.random() *
@@ -208,7 +230,7 @@ var RitualGame = (function () {
         ritualContext.clearRect(5, ritualCanvas.height / 2,
             ritualCanvas.width - 10, ritualCanvas.height / 2 - 5);
         ritualContext.beginPath();
-        ritualContext.arc(xPos, yPos, Math.min(ritualCanvas.width / 2, ritualCanvas.height / 4) * 0.9, -(quart), ((circ) * current) - quart, false);
+        ritualContext.arc(loadingXPos.latest, loadingYPos.latest, Math.min(ritualCanvas.width / 2, ritualCanvas.height / 4) * 0.9, -(quart), ((circ) * current) - quart, false);
         ritualContext.stroke();
     }
 
