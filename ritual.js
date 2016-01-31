@@ -5,30 +5,16 @@ var RitualGame = (function () {
       levels = [
         {
           scale: 0.075,
-          numShapes: 1,
+          numShapes: 20,
           shapeDescriptions: [
-            { kind: 'wine'},
-            { kind: 'cheese'},
-            { kind: 'aquarius'},
-            { kind: 'aries'},
-            { kind: 'cancer'},
             { kind: 'polygon', numSides: { min: 5, max: 5 } },
-            //{ kind: 'beer'},
-            //{ kind: 'cafe'},
-            { kind: 'cap'},
-            { kind: 'gem'},
-            { kind: 'leo'},
-            { kind: 'libra'},
-            { kind: 'pisces'},
-            { kind: 'sag'},
-            { kind: 'scorpio'},
-            { kind: 'taurus'},
-            { kind: 'virgo'}
-          ]
+            { kind: 'icon' }
+          ],
         }
       ],
+      iconPainters,
       minSpeed = 0.05 / 60,
-      maxSpeed = 0.05 / 60,
+      maxSpeed = 0.35 / 60,
       minRotate = pi / 600,
       maxRotate = pi / 120,
       size = {
@@ -54,65 +40,16 @@ var RitualGame = (function () {
       ritualCanvas,
       ritualContext,
       shapes,
-      rituals = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"],
+      syllables = ["dat","dom","dor","jak","jet","jor","kal","kan","kor","lar","lok","lun","man","naz","nok","pan","pod","rel","ron","tan","tik","tok","tor","ver","viz","wax","zam","zim","zor"],
       countdownStarted = false;
 
-
-
     function makeIcon(description) {
-        var	shape = { rotate:0, scale: currentLevel.scale * 7 / 100 };
+        var	shape = { rotate:0, scale: currentLevel.scale * 7 / 100 },
+            iconPainter = iconPainters[Math.floor(Math.random() *
+                iconPainters.length)];
         shape.fillColor = color.shape.fill[Math.floor(Math.random() *
             color.shape.fill.length)];
-        switch(description.kind)	{
-        case "wine":
-            shape.paint = wineDraw.bind(this, shape, size);
-            break;
-        case "cheese":
-            shape.paint = cheeseDraw.bind(this, shape, size);
-            break;
-        case "beer":
-            shape.paint = beerDraw.bind(this, shape, size);
-            break;
-        case "cafe":
-            shape.paint = cafeDraw.bind(this, shape, size);
-            break;
-        case "aquarius":
-            shape.paint = aquariusDraw.bind(this,shape,size);
-            break;
-        case "aries":
-            shape.paint = ariesDraw.bind(this,shape,size);
-            break;
-        case "cancer":
-            shape.paint = cancerDraw.bind(this,shape,size);
-            break;
-        case "cap":
-            shape.paint = capDraw.bind(this,shape,size);
-            break;
-        case "gem":
-            shape.paint = gemDraw.bind(this,shape,size);
-            break;
-        case "leo":
-            shape.paint = leoDraw.bind(this,shape,size);
-            break;
-        case "libra":
-            shape.paint = libraDraw.bind(this,shape,size);
-            break;
-        case "pisces":
-            shape.paint = piscesDraw.bind(this,shape,size);
-            break;
-        case "sag":
-            shape.paint = sagDraw.bind(this,shape,size);
-            break;
-        case "scorpio":
-            shape.paint = scorpioDraw.bind(this,shape,size);
-            break;
-        case "taurus":
-            shape.paint = taurusDraw.bind(this,shape,size);
-            break;
-        case "virgo":
-            shape.paint = virgoDraw.bind(this,shape,size);
-            break;
-        }
+        shape.paint = iconPainter.bind(this, shape, size);
         return shape;
     }
 // to set tabs  for vim
@@ -193,14 +130,14 @@ var RitualGame = (function () {
     context.clearRect(0, 0, size.play, size.play);
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
-      /*
-      context.fillStyle = '#fff';
-      context.beginPath();
-      context.arc(shape.origin.x * size.play, shape.origin.y * size.play,
-          size.radius, 0, 2 * pi);
-      context.closePath();
-      context.fill();
-      */
+      if (shape.selected) {
+        context.fillStyle = '#fff';
+        context.beginPath();
+        context.arc(shape.origin.x * size.play, shape.origin.y * size.play,
+            size.radius, 0, 2 * pi);
+        context.closePath();
+        context.fill();
+      }
       shape.paint(context);
     }
   }
@@ -305,7 +242,7 @@ var RitualGame = (function () {
   }
   
   function drawRituals() {
-    var ritualAmount = rituals.length - 1;
+    var numSyllables = syllables.length - 1;
     
     var YOFFSET = 30;
     var currentYOffset = 20;
@@ -315,8 +252,8 @@ var RitualGame = (function () {
     for (var i = 0; i < 10; i++) {
         var magicWord = "";
         for (var j = 0; j < 3; j++) {
-            var randomElement = Math.floor((Math.random() * ritualAmount));
-            magicWord = magicWord + rituals[randomElement];
+            var randomElement = Math.floor((Math.random() * numSyllables));
+            magicWord = magicWord + syllables[randomElement];
         }
         magicWord = magicWord.charAt(0).toUpperCase() + magicWord.slice(1);
         if(isLandscape()){
@@ -436,20 +373,31 @@ var RitualGame = (function () {
         offsetTop = containers.canvas.offsetTop,
         xTap = event.center.x - offsetLeft,
         yTap = event.center.y - offsetTop,
-        radius = size.radius,
-        i, shape, x, y, dd, d;
+        rr = Math.pow(size.radius, 2),
+        i, shape, x, y, dd,
+        ddClosest = null, shapeClosest = null;
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
       x = shape.origin.x * size.play;
       y = shape.origin.y * size.play;
       dd = Math.pow(xTap - x, 2) + Math.pow(yTap - y, 2);
-      d = Math.sqrt(dd);
-      //console.log(JSON.stringify(shape));
-      console.log(xTap, yTap, x, y, radius, dd, d);
+      //console.log(xTap, yTap, x, y, rr, dd);
+      if (dd <= rr && (ddClosest === null || dd < ddClosest)) {
+        ddClosest = dd;
+        shapeClosest = shape;
+      }
+    }
+    if (shapeClosest !== null) {
+      shapeClosest.selected = true;
     }
   }
 
   function load() {
+    iconPainters = [
+      cheeseDraw, aquariusDraw, ariesDraw, cancerDraw, capDraw,
+      gemDraw, leoDraw, libraDraw, piscesDraw, sagDraw, scorpioDraw,
+      taurusDraw, virgoDraw
+    ],
     // setup ritual
     containers.ritual = document.getElementById('ritualContainer');
     ritualCanvas = document.createElement('canvas');

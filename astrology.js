@@ -707,8 +707,7 @@ context.restore();
 context.restore();
 }
 
-function aquariusDraw(shape,size,context)
-{
+function aquariusDraw(shape,size,context) {
 context.save();
     setContext(shape,size,context,26,26);
 context.beginPath();
