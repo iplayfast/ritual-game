@@ -6,13 +6,14 @@ var RitualGame = (function () {
       cos = Math.cos,
       levels = [
         {
-          scale: 0.1,
-          ritualLength: 3,
-          numShapes: 20,
+          scale: 0.15,
           shapeConstraints: [
             { kind: 'polygon', numSides: { min: 4, max: 6 } },
             { kind: 'icon', families: [ 'food' ] }
           ],
+          ritualLength: 4,
+          numShapes: 12,
+          timeLimit: 15
         }
       ],
       allShapeDescriptions = [],
@@ -29,9 +30,13 @@ var RitualGame = (function () {
       },
       color = {
         background: { play: '#000', ritual: '#fff' },
-        text: { splash: '#fff', syllable: '#fff' },
+        text: {
+          splash: '#fff',
+          syllable: { default: '#444', selected: '#999' }
+        },
         shape: {
-          stroke: '#444'
+          stroke: '#444',
+          selected: { fill: '#bbb', stroke: '#aaa' }
         }
       },
       currentLevel,
@@ -41,11 +46,26 @@ var RitualGame = (function () {
       playCanvasNames = [ 'background', 'shapes', 'touch' ],
       shapes,
       syllables = [
+        // Lawrence:
         'dat', 'dom', 'dor', 'jak', 'jet', 'jor', 'kal', 'kan', 'kor', 'lar',
         'lok', 'lun', 'man', 'naz', 'nok', 'pan', 'pod', 'rel', 'ron', 'tan',
-        'tik', 'tok', 'tor', 'ver', 'viz', 'wax', 'zam', 'zim', 'zor'
+        'tik', 'tok', 'tor', 'ver', 'viz', 'wax', 'zam', 'zim', 'zor',
+        // Mike:
+        'oof', 'foo', 'boo', 'gak', 'bip', 'bop', 'fop', 'dup', 'pip',
+        'pop', 'pif', 'nif',
+        'wiki', 'waka', 'rama', 'lama', 'ding', 'gong', 'dang', 'zoot',
+        'poot', 'toot', 'boot', 'plip', 'plop', 'beep', 'boop', 'bang',
+        'foof', 'moop', 'glik'
       ],
+      numSyllables = syllables.length,
       ritual,
+      ritualPosition,
+      timePrevious,
+      timeStart,
+      status = {
+        playing: false,
+        paused: false
+      },
       layout = {},
       loadingXPos = {
         get latest () {
@@ -95,10 +115,10 @@ var RitualGame = (function () {
         shape = {},
         exteriorAngle = 2 * pi / numSides,
         rotate = shape.rotate = 0,
-        fillColor = description.color,
-        strokeColor = color.shape.stroke,
         points = shape.points = new Array(numSides);
     shape.scale = currentLevel.scale;
+    shape.fillColor = description.color;
+    shape.strokeColor = color.shape.stroke;
     pointAngle = (pi - exteriorAngle) / 2;
     for (i = 0; i < numSides; ++i) {
       pointAngle += exteriorAngle;
@@ -118,10 +138,10 @@ var RitualGame = (function () {
         context.lineTo(points[i].x, points[i].y);
       }
       context.closePath();
-      context.fillStyle = fillColor;
+      context.fillStyle = shape.fillColor;
       context.fill();
       context.lineWidth = 0.075;
-      context.strokeStyle = strokeColor;
+      context.strokeStyle = shape.strokeColor;
       context.stroke();
       context.restore();
     };
@@ -137,7 +157,8 @@ var RitualGame = (function () {
     } else {
       shape = makeIcon(description);
     }
-    shape.origin = { x: 0.5, y: 0.5 };
+    shape.description = description;
+    shape.origin = { x: Math.random(), y: Math.random() };
     direction = Math.random() * 2 * pi;
     speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
     shape.move = {
@@ -148,7 +169,18 @@ var RitualGame = (function () {
     if (Math.random() < 0.5) {
       shape.move.rotate *= -1;
     }
+    shape.syllable = description.syllable;
     return shape;
+  }
+
+  function paintShapeWithColor(context, shape, forceColor) {
+    var saveFillColor = shape.fillColor,
+        saveStrokeColor = shape.strokeColor;
+    shape.fillColor = color.shape.selected.fill;
+    shape.strokeColor = color.shape.selected.stroke;
+    shape.paint(context);
+    shape.fillColor = saveFillColor;
+    shape.strokeColor = saveStrokeColor;
   }
 
   function paintFrame() {
@@ -160,14 +192,13 @@ var RitualGame = (function () {
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
       if (shape.selected) {
-        context.fillStyle = '#fff';
-        context.beginPath();
-        context.arc(shape.origin.x * size.play, shape.origin.y * size.play,
-            context.radius, 0, 2 * pi);
-        context.closePath();
-        context.fill();
+        context.save();
+        context.globalAlpha = 0.5;
+        paintShapeWithColor(context, shape, color.shape.selected);
+        context.restore();
+      } else {
+        shape.paint(context);
       }
-      shape.paint(context);
     }
   }
 
@@ -178,9 +209,12 @@ var RitualGame = (function () {
   }
   
   function paintRitual() {
-    var scale,
-        i, shape,
-        context = contexts.ritual;
+    var canvas = canvases.ritual,
+        context = contexts.ritual,
+        margin,
+        scale,
+        shape,
+        i;
 
     // Background.
     context.fillStyle = color.background.ritual;
@@ -191,20 +225,49 @@ var RitualGame = (function () {
     }
 
     if (isLandscape) {
-      // Set shape size.
-      scale = Math.min(canvases.ritual.width,
-          canvases.ritual.height / 2 / ritual.length) / 2;
+      margin = canvas.width / 6.5;  // Leave room for the countdown bar.
+      scale = Math.min(canvases.ritual.width - margin,
+          canvases.ritual.height / ritual.length) / 2;
       context.radius = scale;
-      // Render shapes.
+      context.fillStyle = color.text.syllable;
+      context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
       for (i = 0; i < ritual.length; ++i) {
         shape = ritual[i];
         context.save();
-        context.translate(scale, (1 + 2 * i) * scale);
+        context.translate(x = margin + scale, y = (1 + 2 * i) * scale);
         shape.origin.x = shape.origin.y = 0;
-        shape.paint(context);
+        if (shape.selected) {
+          paintShapeWithColor(context, shape, color.shape.selected);
+        } else {
+          shape.paint(context);
+        }
         context.restore();
+        context.fillStyle = color.text.syllable[shape.selected ?
+            'selected' : 'default'];
+        context.fillText(shape.syllable, x + 1.2 * scale, y + scale * 0.2);
       }
     } else {
+      margin = canvas.height / 6.5;  // Leave room for the countdown bar.
+      scale = Math.min(canvases.ritual.height - margin,
+          canvases.ritual.width / ritual.length) / 2;
+      context.radius = scale;
+      context.fillStyle = color.text.syllable;
+      context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
+      for (i = 0; i < ritual.length; ++i) {
+        shape = ritual[i];
+        context.save();
+        context.translate(x = (1 + 2 * i) * scale, y = margin + scale);
+        shape.origin.x = shape.origin.y = 0;
+        if (shape.selected) {
+          paintShapeWithColor(context, shape, color.shape.selected);
+        } else {
+          shape.paint(context);
+        }
+        context.restore();
+        context.fillStyle = color.text.syllable[shape.selected ?
+            'selected' : 'default'];
+        context.fillText(shape.syllable, x - scale * 0.6, y + 1.6 * scale);
+      }
     }
   }
   
@@ -234,6 +297,11 @@ var RitualGame = (function () {
           numDescriptions + ' => reducing number of shapes');
       numShapes = numDescriptions;
     }
+    if (numShapes > numSyllables) {
+      console.log('not enough syllables: ' + numShapes + ' > ' +
+          numSyllables + ' => reducing number of shapes');
+      numShapes = numSyllables;
+    }
 
     // Make a random permutation of the description indices.
     permutation = new Array(numDescriptions);
@@ -251,20 +319,41 @@ var RitualGame = (function () {
     }
 
     ritual = new Array(ritualLength);
-    ritual[0] = shapes[0];
-    ritual[ritualLength - 1] = shapes[numShapes - 1];
+    ritual[0] = makeShape(shapes[0].description);
+    ritual[ritualLength - 1] = makeShape(shapes[numShapes - 1].description);
     j = 0;
     for (i = 1; i < ritualLength - 1; ++i) {
       j += Math.floor(numShapes / (ritualLength - 1));
-      ritual[i] = shapes[j];
+      ritual[i] = makeShape(shapes[j].description);
     }
     ritual.reverse();
-    console.log(permutation);
-    console.log(shapeDescriptions);
+    ritualPosition = 0;
     paintRitual();
+    timePrevious = 0;
+    timeStart = Date.now();
+  }
+
+  function paintTime(timeTotal) {
+    var canvas = canvases.ritual,
+        context = contexts.ritual,
+        fraction = Math.min(1, timeTotal / currentLevel.timeLimit),
+        color = 'rgb(' + Math.floor(fraction * 255) + ', ' +
+            Math.floor((1 - fraction) * 255) + ', 0)';
+    context.fillStyle = color;
+    if (isLandscape) {
+      context.fillRect(0, 0, canvas.width / 8, fraction * canvas.height);
+    } else {
+      context.fillRect(0, 0, fraction * canvas.width, canvas.height / 8);
+    }
   }
 
   function updateGame() {
+    var timeTotal = timePrevious + (Date.now() - timeStart) / 1000;
+    paintTime(timeTotal);
+    if (timeTotal > currentLevel.timeLimit) {
+      fail();
+      return;
+    }
     shapes.forEach(function (shape, ix) {
       shape.origin.x += shape.move.x;
       while (shape.origin.x < 0) {
@@ -289,8 +378,9 @@ var RitualGame = (function () {
       }
     });
     paintFrame();
-    //window.requestAnimationFrame(updateGame);
-    setTimeout(updateGame, 1000 / 60);
+    if (status.playing && !status.paused) {
+      window.requestAnimationFrame(updateGame);
+    }
   }
   
   layout.resize = function () {
@@ -355,6 +445,16 @@ var RitualGame = (function () {
     paintRitual();
   }
 
+  function succeed() {
+    console.log('You have succeeded.');
+    status.playing = false;
+  }
+
+  function fail() {
+    console.log('You have failed.');
+    status.playing = false;
+  }
+
   function shapeTap(event) {
     var offsetLeft = containers.play.offsetLeft,
         offsetTop = containers.play.offsetTop,
@@ -362,26 +462,48 @@ var RitualGame = (function () {
         yTap = event.center.y - offsetTop,
         rr = Math.pow(contexts.touch.radius, 2),
         i, shape, x, y, dd,
-        ddClosest = null, shapeClosest = null;
+        ddClosest = null, target = null;
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
+      if (shape.selected) {
+        continue;
+      }
       x = shape.origin.x * size.play;
       y = shape.origin.y * size.play;
       dd = Math.pow(xTap - x, 2) + Math.pow(yTap - y, 2);
-      //console.log(xTap, yTap, x, y, rr, dd);
       if (dd <= rr && (ddClosest === null || dd < ddClosest)) {
         ddClosest = dd;
-        shapeClosest = shape;
+        target = shape;
       }
     }
-    if (shapeClosest !== null) {
-      shapeClosest.selected = true;
+    if (target !== null) {
+      // handle tap
+      if (target.description === ritual[ritualPosition].description) {
+        console.log('hit');
+        (ritual[ritualPosition].target = target).selected = true;
+        ritual[ritualPosition].selected = true;
+        paintRitual();
+        ++ritualPosition;
+        if (ritualPosition == ritual.length) {
+          succeed();
+        }
+      } else {
+        console.log('miss');
+        while (ritualPosition > 0) {
+          --ritualPosition;
+          ritual[ritualPosition].selected = false;
+          ritual[ritualPosition].target.selected = false;
+          delete ritual[ritualPosition].target;
+        }
+        paintRitual();
+      }
     }
   }
 
   // Load the RitualGame module.
   function load() {
-    var numSides;
+    var numSides,
+        permutation;
 
     // All polygon descriptions.
     for (numSides = 3; numSides <= 8; ++numSides) {
@@ -412,6 +534,21 @@ var RitualGame = (function () {
       });
     });
 
+    // Assign a random permutation of syllables to the shape descriptions.
+    permutation = new Array(numSyllables);
+    permutation[0] = 0;
+    for (i = 1; i < numSyllables; ++i) {
+      j = Math.floor(Math.random() * (i + 1));
+      permutation[i] = permutation[j];
+      permutation[j] = i;
+    }
+    allShapeDescriptions.forEach(function (description, pos) {
+      description.syllable = syllables[permutation[pos]];
+    });
+
+    console.log(allShapeDescriptions.length + ' shape descriptions');
+    console.log(numSyllables + ' syllables');
+
     containers.wrapper = document.getElementById('wrapper');
 
     // Set up the ritual display.
@@ -437,6 +574,7 @@ var RitualGame = (function () {
     window.onresize = layout.resize;
     layout.resize();
     loadLevel();
+    status.playing = true;
     updateGame();
   }
 
@@ -541,9 +679,9 @@ var GameMenu = (function () {
   
   function updateGame() {   
     if(!launchedGame) {
-        context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        layout();
-        window.requestAnimationFrame(updateGame);
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      layout();
+      window.requestAnimationFrame(updateGame);
     }
   }
 
