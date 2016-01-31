@@ -33,7 +33,8 @@ var RitualGame = (function () {
       },
       timing = {
         restart: { delay: 0.10 },
-        succeed: { message: 1.5 }
+        fail: { message: 2.5 },
+        succeed: { message: 2.5 }
       },
       currentLevel,
       containers = {},
@@ -362,8 +363,7 @@ var RitualGame = (function () {
     clearSelected();
     timePrevious = 0;
     timeStart = Date.now();
-    status.paused = true;
-    setTimeout(function () {
+    window.setTimeout(function () {
       status.paused = false;
       updateGame();
     }, timing.restart.delay * 1000);
@@ -388,6 +388,7 @@ var RitualGame = (function () {
         timeTotal = timePrevious + (Date.now() - timeStart) / 1000;
     if (!status.playing || status.paused) {
       console.log(JSON.stringify(status));
+      document.getElementById('debug').innerHTML = JSON.stringify(status);
       return;
     }
     paintTime(timeTotal);
@@ -486,11 +487,14 @@ var RitualGame = (function () {
   }
 
   function getIncantation() {
-    var parts = [ ];
+    var parts = [ ],
+        s;
     ritual.forEach(function (shape) {
       parts.push(shape.description.syllable);
     });
-    return parts.join('');
+    s = parts.join('');
+    s = s.charAt(0).toUpperCase() + s.substring(1) + '!';
+    return s;
   }
 
   function clearMessage() {
@@ -505,6 +509,8 @@ var RitualGame = (function () {
         radius = contexts.shapes.radius,
         text, fontSize, textHeight, textWidth,
         boxWidth, boxHeight, left, top;
+    clearSelected();
+    paintRitual();
     text = getIncantation();
     context.font = (radius * 0.78) + "px 'Fredoka One', sans-serif";
     fontSize = 0.78 * radius;
@@ -536,8 +542,8 @@ var RitualGame = (function () {
           console.log('game over');
           status.playing = false;
         }
-        status.paused = true;
         window.setTimeout(function () {
+          status.paused = false;
           clearMessage();
           loadLevel(currentLevelIndex);
         }, timing.succeed.message * 1000);
@@ -551,14 +557,24 @@ var RitualGame = (function () {
       currentLevel.timeLimit *= (1 - timeDecrement);
     }
     window.setTimeout(function () {
+      status.paused = false;
       clearMessage();
       restartLevel(currentLevelIndex);
     }, timing.succeed.message * 1000);
   }
 
   function fail() {
+    var level = currentLevel;
     console.log('You have failed.');
-    status.playing = false;
+    revealIncantation();
+    status.pause = true;
+    level.shapesHidden = false;
+    level.degree = 0;
+    window.setTimeout(function () {
+      //status.paused = false;
+      clearMessage();
+      //restartLevel(currentLevelIndex);
+    }, timing.fail.message * 1000);
   }
 
   function shapeTap(event) {
@@ -570,6 +586,7 @@ var RitualGame = (function () {
         i, shape, x, y, dd,
         ddClosest = null, target = null;
     if (status.paused) {
+      document.getElementById('debug').innerHTML = JSON.stringify(status);
       return;
     }
     for (i = 0; i < shapes.length; ++i) {
@@ -697,6 +714,7 @@ var RitualGame = (function () {
     status.playing = true;
     loadLevel(currentLevelIndex);
     layout.resize();
+    document.getElementById('debug').innerHTML = JSON.stringify(status);
   }
 
   return {
