@@ -18,7 +18,7 @@ var LevelPackOne = [
     shapeConstraints: [
       { kind: 'polygon', numSides: { min: 3, max: 8 } }
     ],
-    numShapes: 12,
+    numShapes: 10,
     sizeFactor: 0.8,
     speedFactor: 0.35,
     spinFactor: 0,
@@ -31,7 +31,7 @@ var LevelPackOne = [
     shapeConstraints: [
       { kind: 'polygon', numSides: { min: 3, max: 8 } }
     ],
-    numShapes: 15,
+    numShapes: 12,
     sizeFactor: 0.8,
     speedFactor: 0.35,
     spinFactor: 0.25,

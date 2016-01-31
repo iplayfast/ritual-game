@@ -5,14 +5,16 @@ var RitualGame = (function () {
       sin = Math.sin,
       cos = Math.cos,
       baseScale = 0.15,
+      maxDegree = 1,
+      timeDecrement = 0.25,
       levels = LevelPackOne,
       allShapeDescriptions = [],
       allShapeColors = [
         '#d38653', '#9cd37c', '#6684bc', '#e6de54', '#d24543', '#7d5695'
       ],
       iconFamilies = {},
-      minSpeed = 0.05 / 60,
-      maxSpeed = 0.35 / 60,
+      minSpeed = 0.20 / 60,
+      maxSpeed = 1.05 / 60,
       minRotate = pi / 600,
       maxRotate = pi / 120,
       size = {
@@ -151,10 +153,8 @@ var RitualGame = (function () {
         shape;
     if (kind == 'polygon') {
       shape = makePolygon(description);
-      console.log('polygon scale ' + shape.scale);
     } else {
       shape = makeIcon(description);
-      console.log('icon scale ' + shape.scale);
     }
     shape.description = description;
     shape.origin = { x: Math.random(), y: Math.random() };
@@ -234,15 +234,21 @@ var RitualGame = (function () {
       context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
       for (i = 0; i < ritual.length; ++i) {
         shape = ritual[i];
-        context.save();
-        context.translate(x = margin + scale, y = (1 + 2 * i) * scale);
-        shape.origin.x = shape.origin.y = 0;
-        if (shape.selected) {
-          paintShapeWithColor(context, shape, color.shape.selected);
+        x = margin + scale;
+        y = (1 + 2 * i) * scale;
+        if (!currentLevel.shapesHidden) {
+          context.save();
+          context.translate(x, y);
+          shape.origin.x = shape.origin.y = 0;
+          if (shape.selected) {
+            paintShapeWithColor(context, shape, color.shape.selected);
+          } else {
+            shape.paint(context);
+          }
+          context.restore();
         } else {
-          shape.paint(context);
+          x -= scale;
         }
-        context.restore();
         context.fillStyle = color.text.syllable[shape.selected ?
             'selected' : 'default'];
         context.fillText(shape.syllable, x + 1.2 * scale, y + scale * 0.2);
@@ -256,15 +262,21 @@ var RitualGame = (function () {
       context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
       for (i = 0; i < ritual.length; ++i) {
         shape = ritual[i];
-        context.save();
-        context.translate(x = (1 + 2 * i) * scale, y = margin + scale);
-        shape.origin.x = shape.origin.y = 0;
-        if (shape.selected) {
-          paintShapeWithColor(context, shape, color.shape.selected);
+        x = (1 + 2 * i) * scale;
+        y = margin + scale;
+        if (!currentLevel.shapesHidden) {
+          context.save();
+          context.translate(x, y);
+          shape.origin.x = shape.origin.y = 0;
+          if (shape.selected) {
+            paintShapeWithColor(context, shape, color.shape.selected);
+          } else {
+            shape.paint(context);
+          }
+          context.restore();
         } else {
-          shape.paint(context);
+          y -= scale;
         }
-        context.restore();
         context.fillStyle = color.text.syllable[shape.selected ?
             'selected' : 'default'];
         context.fillText(shape.syllable, x - scale * 0.6, y + 1.6 * scale);
@@ -282,8 +294,9 @@ var RitualGame = (function () {
         permutation,
         i, j;
 
+    level.degree = 0;
+    level.shapesHidden = false;
     level.scale = level.sizeFactor * baseScale;
-    console.log(level.scale, level.sizeFactor, baseScale);
 
     // Collect shape descriptions matching the level's constraints.
     allShapeDescriptions.forEach(function (description) {
@@ -331,8 +344,15 @@ var RitualGame = (function () {
       ritual[i] = makeShape(shapes[j].description);
     }
     ritual.reverse();
+
     ritualPosition = 0;
-    paintRitual();
+    restartLevel();
+  }
+
+  function restartLevel() {
+    var level = currentLevel;
+    console.log(level.levelId, level.degree, level.timeLimit);
+    clearSelected();
     timePrevious = 0;
     timeStart = Date.now();
   }
@@ -353,7 +373,6 @@ var RitualGame = (function () {
 
   function updateGame() {
     var scale = currentLevel.scale,
-        virtualSize = 1 + 2 * scale,
         timeTotal = timePrevious + (Date.now() - timeStart) / 1000;
     paintTime(timeTotal);
     if (timeTotal > currentLevel.timeLimit) {
@@ -362,18 +381,18 @@ var RitualGame = (function () {
     }
     shapes.forEach(function (shape, ix) {
       shape.origin.x += shape.move.x;
-      while (shape.origin.x < -scale) {
-        shape.origin.x += virtualSize;
+      while (shape.origin.x < 0) {
+        shape.origin.x += 1;
       }
-      while (shape.origin.x >= 1 + scale) {
-        shape.origin.x -= virtualSize;
+      while (shape.origin.x >= 1) {
+        shape.origin.x -= 1;
       }
       shape.origin.y += shape.move.y;
-      while (shape.origin.y < -scale) {
-        shape.origin.y += virtualSize;
+      while (shape.origin.y < 0) {
+        shape.origin.y += 1;
       }
-      while (shape.origin.y >= 1 + scale) {
-        shape.origin.y -= virtualSize;
+      while (shape.origin.y >= 1) {
+        shape.origin.y -= 1;
       }
       shape.rotate = (shape.rotate + shape.move.rotate);
       while (shape.rotate > 2 * pi) {
@@ -453,8 +472,26 @@ var RitualGame = (function () {
   }
 
   function succeed() {
-    console.log('You have succeeded.');
-    status.playing = false;
+    console.log('completed degree ' + currentLevel.degree);
+    if (currentLevel.degree == maxDegree) {
+      if (currentLevel.shapesHidden) {
+        console.log('completed level ' + currentLevel.levelId);
+        currentLevelIndex += 1;
+        if (currentLevelIndex == levels.length) {
+          console.log('game over');
+          status.playing = false;
+        }
+        loadLevel(currentLevelIndex);
+        return;
+      } else {
+        console.log('hiding shapes');
+        currentLevel.shapesHidden = true;
+      }
+    } else {
+      currentLevel.degree += 1;
+      currentLevel.timeLimit *= (1 - timeDecrement);
+    }
+    restartLevel(currentLevelIndex);
   }
 
   function fail() {
@@ -494,15 +531,19 @@ var RitualGame = (function () {
           succeed();
         }
       } else {
-        while (ritualPosition > 0) {
-          --ritualPosition;
-          ritual[ritualPosition].selected = false;
-          ritual[ritualPosition].target.selected = false;
-          delete ritual[ritualPosition].target;
-        }
-        paintRitual();
+        clearSelected();
       }
     }
+  }
+
+  function clearSelected() {
+    while (ritualPosition > 0) {
+      --ritualPosition;
+      ritual[ritualPosition].selected = false;
+      ritual[ritualPosition].target.selected = false;
+      delete ritual[ritualPosition].target;
+    }
+    paintRitual();
   }
 
   // Load the RitualGame module.
@@ -587,7 +628,8 @@ var RitualGame = (function () {
     currentLevel = levels[0];
     window.onresize = layout.resize;
     layout.resize();
-    loadLevel(0);
+    currentLevelIndex = 0;
+    loadLevel(currentLevelIndex);
     layout.resize();
     status.playing = true;
     updateGame();
