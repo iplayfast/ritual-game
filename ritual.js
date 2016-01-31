@@ -216,7 +216,7 @@ var RitualGame = (function () {
     context.fillRect(0, 0, ritualCanvas.width, ritualCanvas.height );
     //console.log(ritualCanvas.width + ',' + ritualCanvas.height);
 
-    // add border and divider horizontally
+    // add border
     var lineWidth = 5;
     context.beginPath();
     context.lineWidth = lineWidth;
@@ -473,4 +473,113 @@ var RitualGame = (function () {
   };
 })();
 
-window.onload = RitualGame.load;
+var GameMenu = (function () {
+    var canvas,
+    context,
+    ritualCanvas,
+    ritualContext,
+    launchedGame = false;
+
+  function load() {
+    // setup menu 
+    gameContainer = document.getElementById('gameContainer');
+    canvas = document.createElement('canvas');
+    gameContainer.appendChild(canvas);
+    context = canvas.getContext('2d');
+    document.body.addEventListener("touchstart", touchDown, false);
+    document.body.addEventListener("touchend", touchUp, false);
+    document.body.addEventListener("mousedown", mouseDown, false);
+    document.body.addEventListener("mouseup", mouseUp, false);
+    updateGame();
+  }
+  
+   
+    function mouseUp() {
+        mouseIsDown = 0;
+        mouseXY();
+    }
+
+    function touchUp() {
+        mouseIsDown = 0;
+    }
+
+    function mouseDown() {
+        mouseIsDown = 1;
+        mouseXY();
+    }
+
+    function touchDown() {
+        mouseIsDown = 1;
+        touchXY();
+    }
+    
+    function mouseXY(e) {
+        if (!e)
+            var e = event;
+        var canX = e.pageX;
+        var canY = e.pageY;
+        pressed(canX, canY);
+    }
+
+    function touchXY(e) {
+        if (!e)
+            var e = event;
+        e.preventDefault();
+        var canX = e.targetTouches[0].pageX;
+        var canY = e.targetTouches[0].pageY;
+        pressed(canX, canY);
+    }
+    
+    function pressed(xPos, yPos) {
+        console.log(xPos + "," + yPos);
+        if(pressedPlayButton(xPos, yPos)) {
+            launchedGame = true;
+            cleanupMenu();
+            RitualGame.load();
+        }
+    }
+    
+    function pressedPlayButton(xPos, yPos) {
+        if(Math.abs(xPos - window.innerWidth/2) < 50 &&
+           Math.abs(yPos - window.innerHeight/2) < 25 ) {
+            return true;
+        }
+        return false
+    }
+  
+  function cleanupMenu() {
+    console.log("cleaning up");
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    window.cancelAnimationFrame(updateGame);
+    document.body.removeEventListener("touchstart", touchDown);
+    document.body.removeEventListener("touchend", touchUp);
+    document.body.removeEventListener("mousedown", mouseDown);
+    document.body.removeEventListener("mouseup", mouseUp);
+  }
+  
+  function layout() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    context.font = "28px Arial";
+    context.fillStyle = 'white';
+    context.fillText("PLAY",window.innerWidth/2 - 50,window.innerHeight/2);
+    
+    context.font = "62px Arial";
+    context.fillStyle = 'white';
+    context.fillText("Ritual Game",window.innerWidth/2 -185,window.innerHeight/2 - 150);
+  }
+  
+  function updateGame() {   
+    if(!launchedGame) {
+        context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        layout();
+        window.requestAnimationFrame(updateGame);
+    }
+  }
+
+  return {
+    load: load
+  };
+})();
+
+window.onload = GameMenu.load;
