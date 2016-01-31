@@ -5,7 +5,7 @@ var RitualGame = (function () {
       levels = [
         {
           scale: 0.075,
-          numShapes: 10,
+          numShapes: 1,
           shapeDescriptions: [
             { kind: 'wine'},
             { kind: 'cheese'},
@@ -268,6 +268,8 @@ var RitualGame = (function () {
         if( current > 0.7) { // turn red
             ritualContext.strokeStyle = '#ff3300';
         }
+        ritualContext.clearRect(5, ritualCanvas.height / 2,
+            ritualCanvas.width - 10, ritualCanvas.height / 2 - 5);
         ritualContext.beginPath();
         ritualContext.arc(xPos, yPos, Math.min(ritualCanvas.width / 2, ritualCanvas.height / 4) * 0.9, -(quart), ((circ) * current) - quart, false);
         ritualContext.stroke();
@@ -436,7 +438,6 @@ var RitualGame = (function () {
         yTap = event.center.y - offsetTop,
         radius = size.radius,
         i, shape, x, y, dd, d;
-    //console.log(offsetTop, offsetTop, x, y);
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
       x = shape.origin.x * size.play;
@@ -444,7 +445,7 @@ var RitualGame = (function () {
       dd = Math.pow(xTap - x, 2) + Math.pow(yTap - y, 2);
       d = Math.sqrt(dd);
       //console.log(JSON.stringify(shape));
-      //console.log(xTap, yTap, x, y, radius, dd, d);
+      console.log(xTap, yTap, x, y, radius, dd, d);
     }
   }
 
