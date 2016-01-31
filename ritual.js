@@ -5,14 +5,16 @@ var RitualGame = (function () {
       sin = Math.sin,
       cos = Math.cos,
       baseScale = 0.15,
+      maxDegree = 2,
+      timeDecrement = 0.25,
       levels = LevelPackOne,
       allShapeDescriptions = [],
       allShapeColors = [
         '#d38653', '#9cd37c', '#6684bc', '#e6de54', '#d24543', '#7d5695'
       ],
       iconFamilies = {},
-      minSpeed = 0.05 / 60,
-      maxSpeed = 0.35 / 60,
+      minSpeed = 0.20 / 60,
+      maxSpeed = 1.05 / 60,
       minRotate = pi / 600,
       maxRotate = pi / 120,
       size = {
@@ -29,11 +31,15 @@ var RitualGame = (function () {
           selected: { fill: '#bbb', stroke: '#aaa' }
         }
       },
+      timing = {
+        restart: { delay: 0.10 },
+        succeed: { message: 1.5 }
+      },
       currentLevel,
       containers = {},
       canvases = {},
       contexts = {},
-      playCanvasNames = [ 'background', 'shapes', 'touch' ],
+      playCanvasNames = [ 'background', 'shapes', 'message', 'touch' ],
       shapes,
       syllables = [
         'bad', 'bak', 'bam', 'bat', 'ben', 'bin', 'bix', 'biz', 'bog',
@@ -151,10 +157,8 @@ var RitualGame = (function () {
         shape;
     if (kind == 'polygon') {
       shape = makePolygon(description);
-      console.log('polygon scale ' + shape.scale);
     } else {
       shape = makeIcon(description);
-      console.log('icon scale ' + shape.scale);
     }
     shape.description = description;
     shape.origin = { x: Math.random(), y: Math.random() };
@@ -234,15 +238,21 @@ var RitualGame = (function () {
       context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
       for (i = 0; i < ritual.length; ++i) {
         shape = ritual[i];
-        context.save();
-        context.translate(x = margin + scale, y = (1 + 2 * i) * scale);
-        shape.origin.x = shape.origin.y = 0;
-        if (shape.selected) {
-          paintShapeWithColor(context, shape, color.shape.selected);
+        x = margin + scale;
+        y = (1 + 2 * i) * scale;
+        if (!currentLevel.shapesHidden) {
+          context.save();
+          context.translate(x, y);
+          shape.origin.x = shape.origin.y = 0;
+          if (shape.selected) {
+            paintShapeWithColor(context, shape, color.shape.selected);
+          } else {
+            shape.paint(context);
+          }
+          context.restore();
         } else {
-          shape.paint(context);
+          x -= scale;
         }
-        context.restore();
         context.fillStyle = color.text.syllable[shape.selected ?
             'selected' : 'default'];
         context.fillText(shape.syllable, x + 1.2 * scale, y + scale * 0.2);
@@ -256,15 +266,21 @@ var RitualGame = (function () {
       context.font = (scale * 0.58) + "px 'Fredoka One', sans-serif";
       for (i = 0; i < ritual.length; ++i) {
         shape = ritual[i];
-        context.save();
-        context.translate(x = (1 + 2 * i) * scale, y = margin + scale);
-        shape.origin.x = shape.origin.y = 0;
-        if (shape.selected) {
-          paintShapeWithColor(context, shape, color.shape.selected);
+        x = (1 + 2 * i) * scale;
+        y = margin + scale;
+        if (!currentLevel.shapesHidden) {
+          context.save();
+          context.translate(x, y);
+          shape.origin.x = shape.origin.y = 0;
+          if (shape.selected) {
+            paintShapeWithColor(context, shape, color.shape.selected);
+          } else {
+            shape.paint(context);
+          }
+          context.restore();
         } else {
-          shape.paint(context);
+          y -= scale;
         }
-        context.restore();
         context.fillStyle = color.text.syllable[shape.selected ?
             'selected' : 'default'];
         context.fillText(shape.syllable, x - scale * 0.6, y + 1.6 * scale);
@@ -282,8 +298,10 @@ var RitualGame = (function () {
         permutation,
         i, j;
 
+    status.paused = false;
+    level.degree = 0;
+    level.shapesHidden = false;
     level.scale = level.sizeFactor * baseScale;
-    console.log(level.scale, level.sizeFactor, baseScale);
 
     // Collect shape descriptions matching the level's constraints.
     allShapeDescriptions.forEach(function (description) {
@@ -331,10 +349,24 @@ var RitualGame = (function () {
       ritual[i] = makeShape(shapes[j].description);
     }
     ritual.reverse();
+
     ritualPosition = 0;
-    paintRitual();
+    clearSelected();
     timePrevious = 0;
     timeStart = Date.now();
+    updateGame();
+  }
+
+  function restartLevel() {
+    var level = currentLevel;
+    clearSelected();
+    timePrevious = 0;
+    timeStart = Date.now();
+    status.paused = true;
+    setTimeout(function () {
+      status.paused = false;
+      updateGame();
+    }, timing.restart.delay * 1000);
   }
 
   function paintTime(timeTotal) {
@@ -353,8 +385,11 @@ var RitualGame = (function () {
 
   function updateGame() {
     var scale = currentLevel.scale,
-        virtualSize = 1 + 2 * scale,
         timeTotal = timePrevious + (Date.now() - timeStart) / 1000;
+    if (!status.playing || status.paused) {
+      console.log(JSON.stringify(status));
+      return;
+    }
     paintTime(timeTotal);
     if (timeTotal > currentLevel.timeLimit) {
       fail();
@@ -362,18 +397,18 @@ var RitualGame = (function () {
     }
     shapes.forEach(function (shape, ix) {
       shape.origin.x += shape.move.x;
-      while (shape.origin.x < -scale) {
-        shape.origin.x += virtualSize;
+      while (shape.origin.x < 0) {
+        shape.origin.x += 1;
       }
-      while (shape.origin.x >= 1 + scale) {
-        shape.origin.x -= virtualSize;
+      while (shape.origin.x >= 1) {
+        shape.origin.x -= 1;
       }
       shape.origin.y += shape.move.y;
-      while (shape.origin.y < -scale) {
-        shape.origin.y += virtualSize;
+      while (shape.origin.y < 0) {
+        shape.origin.y += 1;
       }
-      while (shape.origin.y >= 1 + scale) {
-        shape.origin.y -= virtualSize;
+      while (shape.origin.y >= 1) {
+        shape.origin.y -= 1;
       }
       shape.rotate = (shape.rotate + shape.move.rotate);
       while (shape.rotate > 2 * pi) {
@@ -384,9 +419,7 @@ var RitualGame = (function () {
       }
     });
     paintFrame();
-    if (status.playing && !status.paused) {
-      window.requestAnimationFrame(updateGame);
-    }
+    window.requestAnimationFrame(updateGame);
   }
   
   layout.resize = function () {
@@ -452,9 +485,75 @@ var RitualGame = (function () {
     paintRitual();
   }
 
+  function getIncantation() {
+    var parts = [ ];
+    ritual.forEach(function (shape) {
+      parts.push(shape.description.syllable);
+    });
+    return parts.join('');
+  }
+
+  function clearMessage() {
+    var canvas = canvases.message,
+        context = contexts.message;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function revealIncantation() {
+    var canvas = canvases.message,
+        context = contexts.message,
+        radius = contexts.shapes.radius,
+        text, fontSize, textHeight, textWidth,
+        boxWidth, boxHeight, left, top;
+    text = getIncantation();
+    context.font = (radius * 0.78) + "px 'Fredoka One', sans-serif";
+    fontSize = 0.78 * radius;
+    textHeight = 1.5 * fontSize;
+    textWidth = context.measureText(text).width;
+    boxWidth = textWidth * 1.5;
+    boxHeight = textHeight * 1.2;
+    left = (size.play - boxWidth) / 2;
+    top = (size.play - boxHeight) / 2;
+    context.save();
+    context.globalAlpha = 0.8;
+    context.fillStyle = '#fff';
+    context.fillRect(left, top, boxWidth, boxHeight);
+    context.restore();
+    context.fillStyle = '#666';
+    context.fillText(text, left + (boxWidth - textWidth) / 2,
+        top + boxHeight / 1.5);
+  }
+
   function succeed() {
-    console.log('You have succeeded.');
-    status.playing = false;
+    console.log('completed degree ' + currentLevel.degree);
+    revealIncantation();
+    status.paused = true;
+    if (currentLevel.degree == maxDegree) {
+      if (currentLevel.shapesHidden) {
+        console.log('completed level ' + currentLevel.levelId);
+        currentLevelIndex += 1;
+        if (currentLevelIndex == levels.length) {
+          console.log('game over');
+          status.playing = false;
+        }
+        status.paused = true;
+        window.setTimeout(function () {
+          clearMessage();
+          loadLevel(currentLevelIndex);
+        }, timing.succeed.message * 1000);
+        return;
+      } else {
+        console.log('hiding shapes');
+        currentLevel.shapesHidden = true;
+      }
+    } else {
+      currentLevel.degree += 1;
+      currentLevel.timeLimit *= (1 - timeDecrement);
+    }
+    window.setTimeout(function () {
+      clearMessage();
+      restartLevel(currentLevelIndex);
+    }, timing.succeed.message * 1000);
   }
 
   function fail() {
@@ -470,6 +569,9 @@ var RitualGame = (function () {
         rr = Math.pow(contexts.touch.radius, 2),
         i, shape, x, y, dd,
         ddClosest = null, target = null;
+    if (status.paused) {
+      return;
+    }
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
       if (shape.selected) {
@@ -494,15 +596,19 @@ var RitualGame = (function () {
           succeed();
         }
       } else {
-        while (ritualPosition > 0) {
-          --ritualPosition;
-          ritual[ritualPosition].selected = false;
-          ritual[ritualPosition].target.selected = false;
-          delete ritual[ritualPosition].target;
-        }
-        paintRitual();
+        clearSelected();
       }
     }
+  }
+
+  function clearSelected() {
+    while (ritualPosition > 0) {
+      --ritualPosition;
+      ritual[ritualPosition].selected = false;
+      ritual[ritualPosition].target.selected = false;
+      delete ritual[ritualPosition].target;
+    }
+    paintRitual();
   }
 
   // Load the RitualGame module.
@@ -587,10 +693,10 @@ var RitualGame = (function () {
     currentLevel = levels[0];
     window.onresize = layout.resize;
     layout.resize();
-    loadLevel(0);
-    layout.resize();
+    currentLevelIndex = 0;
     status.playing = true;
-    updateGame();
+    loadLevel(currentLevelIndex);
+    layout.resize();
   }
 
   return {
