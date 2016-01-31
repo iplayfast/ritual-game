@@ -13,8 +13,8 @@ var RitualGame = (function () {
             { kind: 'aries'},
             { kind: 'cancer'},
             { kind: 'polygon', numSides: { min: 5, max: 5 } },
-            { kind: 'beer'},
-            { kind: 'cafe'},
+            //{ kind: 'beer'},
+            //{ kind: 'cafe'},
             { kind: 'cap'},
             { kind: 'gem'},
             { kind: 'leo'},
@@ -193,12 +193,14 @@ var RitualGame = (function () {
     context.clearRect(0, 0, size.play, size.play);
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
+      /*
       context.fillStyle = '#fff';
       context.beginPath();
       context.arc(shape.origin.x * size.play, shape.origin.y * size.play,
           size.radius, 0, 2 * pi);
       context.closePath();
       context.fill();
+      */
       shape.paint(context);
     }
   }
@@ -430,16 +432,19 @@ var RitualGame = (function () {
   function shapeTap(event) {
     var offsetLeft = containers.canvas.offsetLeft,
         offsetTop = containers.canvas.offsetTop,
-        x = event.center.x - offsetLeft,
-        y = event.center.y - offsetTop,
-        shape,
-        radius,
-        i;
-    console.log(offsetTop, offsetTop, x, y);
+        xTap = event.center.x - offsetLeft,
+        yTap = event.center.y - offsetTop,
+        radius = size.radius,
+        i, shape, x, y, dd, d;
+    //console.log(offsetTop, offsetTop, x, y);
     for (i = 0; i < shapes.length; ++i) {
       shape = shapes[i];
-      console.log(JSON.stringify(shape));
-      console.log(size.radius);
+      x = shape.origin.x * size.play;
+      y = shape.origin.y * size.play;
+      dd = Math.pow(xTap - x, 2) + Math.pow(yTap - y, 2);
+      d = Math.sqrt(dd);
+      //console.log(JSON.stringify(shape));
+      //console.log(xTap, yTap, x, y, radius, dd, d);
     }
   }
 
@@ -582,4 +587,5 @@ var GameMenu = (function () {
   };
 })();
 
-window.onload = GameMenu.load;
+//window.onload = GameMenu.load;
+window.onload = RitualGame.load;

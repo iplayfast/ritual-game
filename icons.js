@@ -29,6 +29,6 @@ function setContext(shape, size, context, iconMaxX, iconMaxY) {
     context.strokeStyle = '#888';
     context.lineWidth = 3;
     context.rotate(rotate);
-    context.strokeRect(0, 0, 2 * size.radius, 2 * size.radius);
+    //context.strokeRect(0, 0, 2 * size.radius, 2 * size.radius);
     context.scale(shape.scale * size.play, shape.scale * size.play);
 }
