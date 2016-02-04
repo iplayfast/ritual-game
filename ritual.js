@@ -566,9 +566,10 @@ var RitualGame = (function () {
   function fail() {
     var level = currentLevel;
     console.log('You have failed.');
-    revealIncantation();
+    //revealIncantation();
     status.pause = true;
     level.shapesHidden = false;
+    paintRitual();
     level.degree = 0;
     window.setTimeout(function () {
       //status.paused = false;
@@ -597,9 +598,15 @@ var RitualGame = (function () {
       x = shape.origin.x * size.play;
       y = shape.origin.y * size.play;
       dd = Math.pow(xTap - x, 2) + Math.pow(yTap - y, 2);
-      if (dd <= rr && (ddClosest === null || dd < ddClosest)) {
-        ddClosest = dd;
-        target = shape;
+      if (dd <= rr) {
+        if (shape.description === ritual[ritualPosition].description) {
+          target = shape;
+          break;
+        }
+        if (ddClosest === null || dd < ddClosest) {
+          ddClosest = dd;
+          target = shape;
+        }
       }
     }
     if (target !== null) {
