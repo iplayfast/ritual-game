@@ -16,12 +16,12 @@ var LevelPackOne = [
     levelId: 2,
     ritualLength: 3,
     shapeConstraints: [
-      { kind: 'polygon', numSides: { min: 3, max: 8 } }
+      { kind: 'polygon', numSides: { min: 3, max: 6 } }
     ],
-    numShapes: 10,
+    numShapes: 12,
     sizeFactor: 0.8,
     speedFactor: 0.35,
-    spinFactor: 0,
+    spinFactor: .25,
     timeLimit: 15,
     hideIcons: false
   },
@@ -29,13 +29,13 @@ var LevelPackOne = [
     levelId: 3,
     ritualLength: 3,
     shapeConstraints: [
-      { kind: 'polygon', numSides: { min: 3, max: 8 } }
+      { kind: 'polygon', numSides: { min: 3, max: 6 } }
     ],
-    numShapes: 12,
+    numShapes: 15,
     sizeFactor: 0.8,
-    speedFactor: 0.35,
-    spinFactor: 0.25,
-    timeLimit: 10,
+    speedFactor: 0.45,
+    spinFactor: 0.35,
+    timeLimit: 12,
     hideIcons: false
   },
   {
